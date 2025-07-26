@@ -1,5 +1,7 @@
-import { Controller, Get, Param } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { HrService } from './hr.services';
+import { CreateHrDto } from './dto/hr.dto';
+
 
 
 @Controller('hr')
@@ -16,6 +18,13 @@ export class HrController{
     getHrId(@Param('id')id: number): string {
         return this.hrService.getHrId(id);
     }
+
+
+    @Post()
+    createHr(@Body() createHrDto: CreateHrDto){
+        return this.hrService.createHr(createHrDto);
+    }
+
 
 
     
