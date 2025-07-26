@@ -8,7 +8,7 @@ export class HrService{
         return 'Dashboard data for HR.'
     }
 
-    getAdmin(id: number): string {
-        return 'Admin ID: ${id}'
+    getHrId(id: number): string {
+        return `Admin ID: ${id}`
     }
 }

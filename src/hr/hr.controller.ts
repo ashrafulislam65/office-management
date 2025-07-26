@@ -1,5 +1,5 @@
-import { Controller, Get } from "@nestjs/common";
-
+import { Controller, Get, Param } from "@nestjs/common";
+import { HrService } from './hr.services';
 
 
 @Controller('hr')
@@ -13,7 +13,7 @@ export class HrController{
 
 
     @Get('/:id')
-    getHrId(@Param('id')id:number): string {
+    getHrId(@Param('id')id: number): string {
         return this.hrService.getHrId(id);
     }
 
