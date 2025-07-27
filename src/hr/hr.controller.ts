@@ -30,11 +30,11 @@ export class HrController{
     }
 
 
-     @Post('upload')
-        @UseInterceptors(
+    @Post('upload')
+    @UseInterceptors(
             FileInterceptor('file', {
             storage: diskStorage({
-                destination: './hr/uploads', // ✅ make sure this folder exists
+                destination: './hr/uploads', 
                 filename: (req, file, callback) => {
                 const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
                 const ext = extname(file.originalname);
