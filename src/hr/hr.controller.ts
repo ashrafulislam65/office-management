@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Param, Post, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Res, UploadedFile, UseInterceptors } from "@nestjs/common";
 import { HrService } from './hr.services';
 import { CreateHrDto } from './dto/hr.dto';
 import { FileInterceptor } from "@nestjs/platform-express";
-import { extname } from "path";
+import { extname, join } from "path";
 import { diskStorage } from 'multer';
+import { Response } from 'express';
+
 
 
 
@@ -36,11 +38,12 @@ export class HrController{
             storage: diskStorage({
                 destination: './hr/uploads', 
                 filename: (req, file, callback) => {
-                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-                const ext = extname(file.originalname);
-                const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
-                callback(null, filename);
+                    const uniqueSuffix = Date.now();
+                    const filename = `${file.originalname}`;
+                    callback(null, filename);
                 },
+                
+
             }),
             limits: {
                 fileSize: 5 * 1024 * 1024, // 5MB max
@@ -64,6 +67,14 @@ export class HrController{
             path: `/hr/uploads/${file.filename}`,
             };
         }
+
+
+
+    @Get('getimage/:name')
+    getImage(@Param('name') name: string, @Res() res: Response) {
+        const imagePath = join(process.cwd(), 'hr/uploads', name);
+        return res.sendFile(imagePath);
+    }
 
 
 
