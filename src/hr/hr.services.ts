@@ -13,7 +13,7 @@ export class HrService{
     }
 
     createHr(createHrDto: CreateHrDto): string{
-        const { id, name, email, password } = createHrDto;
-    return `HR Created: ${id}, ${name}, ${email}, ${password}`;
+        const { id, name, email, password, phone } = createHrDto;
+    return `HR Created: ${id}, ${name}, ${email}, ${password}, ${phone}`;
     }
 }

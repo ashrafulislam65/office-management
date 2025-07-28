@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Res, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { HrService } from './hr.services';
 import { CreateHrDto } from './dto/hr.dto';
 import { FileInterceptor } from "@nestjs/platform-express";
@@ -27,7 +27,9 @@ export class HrController{
 
 
     @Post()
+    @UsePipes(new ValidationPipe())
     createHr(@Body() createHrDto: CreateHrDto){
+        console.log(createHrDto)
         return this.hrService.createHr(createHrDto);
     }
 
