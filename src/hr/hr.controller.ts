@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Query, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { HrService } from './hr.services';
 import { CreateHrDto } from './dto/hr.dto';
 import { FileInterceptor } from "@nestjs/platform-express";
@@ -14,23 +14,40 @@ import { Response } from 'express';
 export class HrController{
     constructor(private readonly hrService: HrService){}
 
+    @Post()
+    @UsePipes(new ValidationPipe())
+    async createHr(@Body() createHrDto: CreateHrDto){
+        return await this.hrService.createHr(createHrDto);
+    }
+
     @Get()
     getHr(){
         return this.hrService.getDashboardData();
     }
 
+    // Retrieve users whose full name contains a substring (query param)
+    @Get('search')
+    async searchHrByFullName(@Query('name') name: string) {
+        return await this.hrService.findHrByFullName(name);
+    }
 
-    @Get('/:id')
+
+    @Get('id/:id')
     getHrId(@Param('id')id: number): string {
         return this.hrService.getHrId(id);
     }
 
+    // Retrieve a user by username (param)
+    @Get('username/:username')
+    async getHrByUsername(@Param('username') username: string) {
+        return await this.hrService.findHrByUsername(username);
+    }
 
-    @Post()
-    @UsePipes(new ValidationPipe())
-    createHr(@Body() createHrDto: CreateHrDto){
-        console.log(createHrDto)
-        return this.hrService.createHr(createHrDto);
+    // Remove a user by username
+    @Delete('username/:username')
+    async deleteHrByUsername(@Param('username') username: string) {
+        await this.hrService.removeHrByUsername(username);
+        return { message: `User with username "${username}" has been removed` };
     }
 
 

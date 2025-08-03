@@ -2,12 +2,12 @@ import { Module } from "@nestjs/common";
 import { HrController } from "./hr.controller";
 import { HrService } from "./hr.services";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { EmployeeEntity } from "./hr.entity";
+import { HrEntity } from "./hr.entity";
 
 
 
 @Module({
-    imports: [ TypeOrmModule.forFeature([EmployeeEntity]),],
+    imports: [ TypeOrmModule.forFeature([HrEntity]),],
     controllers:[HrController],
     providers: [HrService],
 })

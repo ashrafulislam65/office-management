@@ -1,16 +1,18 @@
-import { IsEmail, IsInt, isNotEmpty, IsNotEmpty, IsNumberString, IsPhoneNumber, IsString, IsStrongPassword, Length, Matches } from "class-validator";
+import { IsBoolean, IsEmail, IsInt, isNotEmpty, IsNotEmpty, IsNumberString, IsOptional, IsPhoneNumber, IsString, IsStrongPassword, Length, Matches } from "class-validator";
 
 
 
 export class CreateHrDto{
 
     @IsNotEmpty()
-    @IsInt()
-    id: number;
+    @IsString()
+    @Length(1, 100)
+    username: string;
 
     @IsNotEmpty()
     @IsString()
-    name: string;
+    @Length(1, 150)
+    fullName: string;
 
     @IsNotEmpty()
     @IsEmail()
@@ -24,6 +26,10 @@ export class CreateHrDto{
     @IsNumberString()
     @Length(11, 15)
     @IsPhoneNumber('BD', { message: 'Phone number must be a valid Bangladeshi number' })
-    phone: string;
+    phone: string; 
+
+    @IsOptional()
+    @IsBoolean()
+    isWorking?: boolean;
 
 }

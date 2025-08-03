@@ -7,7 +7,6 @@ import { HrController } from './hr/hr.controller';
 import { HrService } from './hr/hr.services';
 import { HrModule } from './hr/hr.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { EmployeeEntity } from './hr/hr.entity';
 
 @Module({
   imports: [HrModule, TypeOrmModule.forRoot(
@@ -26,10 +25,9 @@ import { EmployeeEntity } from './hr/hr.entity';
         }
       }
       } ),
-      TypeOrmModule.forFeature([EmployeeEntity]), 
 ],
-  controllers: [AppController, EmployeesController, HrController],
-  providers: [AppService, EmployeesService, HrService],
+  controllers: [AppController, EmployeesController],
+  providers: [AppService, EmployeesService],
 })
 export class AppModule {}
 
