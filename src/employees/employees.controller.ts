@@ -12,7 +12,10 @@ export class EmployeesController {
     async create(@Body() createEmployeesDto: CreateEmployeesDto): Promise<Employees> {
         return this.employeesService.create(createEmployeesDto);
     }
-
+     @Get()
+    async findAll(): Promise<Employees[]> {
+        return this.employeesService.findAll();
+    }
     @Put(':id/status')
     @UsePipes(new ValidationPipe())
     async updateStatus(

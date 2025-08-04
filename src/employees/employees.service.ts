@@ -14,11 +14,13 @@ export class EmployeesService {
     async create(createEmployeesDto: CreateEmployeesDto): Promise<Employees> {
         const employee = this.employeesRepository.create({
             ...createEmployeesDto,
-            status: 'active' // Default status as per requirements
+            status: 'active' 
         });
         return this.employeesRepository.save(employee);
     }
-
+    async findAll(): Promise<Employees[]> {
+        return this.employeesRepository.find();
+    }
     async updateStatus(id: number, updateEmployeesStatusDto: UpdateEmployeesStatusDto): Promise<Employees> {
         const employee = await this.employeesRepository.findOne({ where: { id } });
         if (!employee) {
