@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { HrService } from './hr.services';
 import { CreateHrDto } from './dto/hr.dto';
 import { FileInterceptor } from "@nestjs/platform-express";
 import { extname, join } from "path";
 import { diskStorage } from 'multer';
 import { Response } from 'express';
+import { HrEntity } from "./hr.entity";
 
 
 
@@ -25,7 +26,7 @@ export class HrController{
         return this.hrService.getDashboardData();
     }
 
-    // Retrieve users whose full name contains a substring (query param)
+    // Retrieve hr whose full name contains a substring (query param)
     @Get('search')
     async searchHrByFullName(@Query('name') name: string) {
         return await this.hrService.findHrByFullName(name);
@@ -37,18 +38,25 @@ export class HrController{
         return this.hrService.getHrId(id);
     }
 
-    // Retrieve a user by username (param)
+    // Retrieve a hr by username (param)
     @Get('username/:username')
     async getHrByUsername(@Param('username') username: string) {
         return await this.hrService.findHrByUsername(username);
     }
 
-    // Remove a user by username
+    // Remove a hr by username
     @Delete('username/:username')
     async deleteHrByUsername(@Param('username') username: string) {
         await this.hrService.removeHrByUsername(username);
         return { message: `User with username "${username}" has been removed` };
     }
+
+    // Update a hr by username
+    @Patch('username/:username')
+    async updateHr(@Param('username') username: string, @Body() updateData: Partial<CreateHrDto>): Promise<HrEntity> {
+        return this.hrService.updateHrByUsername(username, updateData);
+    }
+
 
 
     @Post('upload')

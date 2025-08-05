@@ -22,13 +22,19 @@ export class HrEntity {
     password: string;
 
     @Column()
-    designation: string;
+    address: string;
 
     @Column()
     salary: string;
 
     @Column({ default: false })
     isWorking: boolean;
+
+    @Column()
+    age: string;
+
+    @Column()
+    gender: string;
 
     @BeforeInsert()
     generateId() {

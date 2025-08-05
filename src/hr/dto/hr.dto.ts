@@ -33,6 +33,14 @@ export class CreateHrDto {
     @IsString()
     salary: string;
 
+    @IsNotEmpty()
+    @IsString()
+    age: string;
+
+    @IsNotEmpty()
+    @IsString()
+    gender: string;
+
     @IsOptional()
     @IsBoolean()
     isWorking?: boolean;

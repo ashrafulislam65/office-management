@@ -27,7 +27,7 @@ export class HrService{
         return await this.hrRepository.save(newHr);
     }
 
-    // Retrieve users whose full name contains a substring
+    // Retrieve Hr whose full name contains a substring
     async findHrByFullName(substring: string): Promise<HrEntity[]> {
         return await this.hrRepository.find({
         where: { 
@@ -36,7 +36,7 @@ export class HrService{
         });
     }
 
-    // Retrieve a user by unique username
+    // Retrieve a Hr by unique username
     async findHrByUsername(username: string): Promise<HrEntity> {
         const user = await this.hrRepository.findOne({ 
             where: { 
@@ -48,7 +48,7 @@ export class HrService{
         return user;
     }
 
-    // Remove a user by username
+    // Remove a Hr by username
     async removeHrByUsername(username: string): Promise<void> {
         const result = await this.hrRepository.delete({ 
             username 
@@ -57,4 +57,24 @@ export class HrService{
         throw new NotFoundException(`User with username "${username}" not found`);
         }
     }
+
+    // Update a Hr by username
+    async updateHrByUsername(username: string, updateData: Partial<CreateHrDto>): Promise<HrEntity> {
+        const hr = await this.hrRepository.findOne({ where: { username } });
+
+        if (!hr) {
+            throw new NotFoundException(`User with username "${username}" not found`);
+        }
+
+        Object.assign(hr, updateData);
+
+        return await this.hrRepository.save(hr);
+    }
+
+
+    //Create Employee
+    async createEmployee() Promise<>{
+
+    }
+
 }
