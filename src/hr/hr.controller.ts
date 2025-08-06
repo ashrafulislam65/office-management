@@ -6,6 +6,9 @@ import { extname, join } from "path";
 import { diskStorage } from 'multer';
 import { Response } from 'express';
 import { HrEntity } from "./hr.entity";
+import { Employees } from "src/employees/employees.entity";
+import { CreateEmployeesDto } from "src/employees/employees.dto";
+import { CreateHrTaskDto } from "./dto/hr.hrTaskDto";
 
 
 
@@ -56,6 +59,61 @@ export class HrController{
     async updateHr(@Param('username') username: string, @Body() updateData: Partial<CreateHrDto>): Promise<HrEntity> {
         return this.hrService.updateHrByUsername(username, updateData);
     }
+
+
+
+    //Create new Employee
+    @Post('create-employee')
+    @UsePipes(new ValidationPipe({ whitelist: true }))
+    async createEmployee(@Body() employeeData: CreateEmployeesDto): Promise<Employees> {
+    return this.hrService.createEmployee(employeeData);
+    }
+
+    // Update Employee by id
+    @Patch('id/:id')
+    async updateEmployee(
+        @Param('id') id: number, @Body(new ValidationPipe({ skipMissingProperties: true })) updateData: Partial<CreateEmployeesDto>): Promise<Employees>  {
+        return this.hrService.updateEmployee(id, updateData);
+    }
+
+    // Remove Employee by id
+    @Delete('id/:id')
+    async deleteEmployee(@Param('id') id: number) {
+        await this.hrService.removeEmployee(id);
+        return { message: `User with username "${id}" has been removed` };
+    }
+
+    @Get('ids')
+    async getHrIdsAndNames() {
+        return this.hrService.getHrIdsAndNames();
+    }
+
+    // Get Employee IDs & Names
+    @Get('employees/ids')
+    async getEmployeeIdsAndNames() {
+        return this.hrService.getEmployeeIdsAndNames();
+    }
+
+    // Assign Task to Employee
+    @Post('assign-task')
+    async assignTask(@Body(new ValidationPipe()) dto: CreateHrTaskDto) {
+        return this.hrService.assignTask(dto);
+    }
+
+    // Get All Tasks
+    @Get('tasks')
+    async getAllTasks() {
+        return this.hrService.getAllTasks();
+    }
+
+    // Get Tasks for Specific Employee
+    @Get('tasks/employee/:id')
+    async getTasksByEmployee(@Param('id') employeeId: number) {
+        return this.hrService.getTasksByEmployee(employeeId);
+    }
+
+
+
 
 
 

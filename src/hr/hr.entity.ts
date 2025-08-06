@@ -1,10 +1,10 @@
-import { BeforeInsert, Column, Entity, PrimaryColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { v4 as uuid } from 'uuid';
 
 @Entity("hr")
 export class HrEntity {
-    @PrimaryColumn()
-    id: string;
+    @PrimaryGeneratedColumn()
+    id: number;
 
     @Column({ length: 100, unique: true })
     username: string;
@@ -30,14 +30,14 @@ export class HrEntity {
     @Column({ default: false })
     isWorking: boolean;
 
-    @Column()
+    @Column({nullable: true})
     age: string;
 
-    @Column()
+    @Column({nullable: true})
     gender: string;
 
-    @BeforeInsert()
-    generateId() {
-        this.id = uuid();  
-    }
+    // @BeforeInsert()
+    // generateId() {
+    //     this.id = uuid();  
+    // }
 }

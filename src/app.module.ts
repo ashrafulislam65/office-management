@@ -7,9 +7,10 @@ import { HrController } from './hr/hr.controller';
 import { HrService } from './hr/hr.services';
 import { HrModule } from './hr/hr.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EmployeesModule } from './employees/employees.module';
 
 @Module({
-  imports: [HrModule, TypeOrmModule.forRoot(
+  imports: [HrModule, EmployeesModule, TypeOrmModule.forRoot(
     {
       type: 'postgres',
       host: 'dpg-d25r49a4d50c73fjma40-a.singapore-postgres.render.com',
