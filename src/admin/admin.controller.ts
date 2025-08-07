@@ -1,5 +1,5 @@
 //import { Body,Controller,Delete,Get,Param,ParseUUIDPipe,Patch,Post,Query } from"@nestjs/common";
-import { Body, Controller, Post, Get, Param, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe, BadRequestException, Patch, UseGuards, Delete, Query } from "@nestjs/common";
+import { Body, Controller, Post, Get, Param, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe, BadRequestException, Patch, UseGuards, Delete, Query, Put } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import { AdminService } from './admin.service';
@@ -9,6 +9,8 @@ import { AdminEntity } from './admin.entity';
 import { UpdateAdminDto } from "./update-admin.dto";    
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { CreateDepartmentDto,UpdateDepartmentDto } from "./department.dto";
+import { Department } from "./department.entity";
 @Controller('admin/users')
 export class AdminController {
     
@@ -113,6 +115,83 @@ async getAdminwithFullName(@Query('fullName') fullName: string): Promise<AdminEn
     async getAdminWithNullFullName(): Promise<AdminEntity[]> {
         return this.adminService.getAdminWithNullFullName();
     }
+
+
+    // @Post('department')
+    // @UsePipes(new ValidationPipe())
+    // createDepartment(
+    //     @Body() departmentDto: Department
+    // ): Promise<Department> {
+    //     return this.adminService.createDepartment(departmentDto);
+    // }
+
+    // @Get('department')
+    // async getAllDepartments(): Promise<Department[]> {
+    //     return this.adminService.getAllDepartments();
+    // }
+
+    // @Patch('department/:id')
+    // async updateDepartment(
+    //     @Param('id') id: number,
+    //     @Body() departmentDto: DepartmentDto
+    // ): Promise<Department> {
+    //     return this.adminService.updateDepartment(id, departmentDto);
+    // }
+
+    // @Delete('department/:id')
+    // async deleteDepartment(@Param('id') id: number): Promise<void> {
+    //     return this.adminService.deleteDepartment(id);
+    // }
+
+
+
+ @Post(':adminId')
+async createDepartment(
+  @Param('adminId') adminId: string , // No UUID validation
+  @Body() createDto: CreateDepartmentDto
+) {
+  return this.adminService.createDepartment(adminId, createDto);
+}
+
+ @Get(":adminId")
+ async getAdminDepartments(
+   @Param('adminId') adminId: string
+ ): Promise<Department[]> {
+
+    const departments=await this.adminService.getAdminDepartments(adminId);
+    if(!departments || departments.length === 0) {
+      throw new BadRequestException('No departments found for this admin');
+    }
+    return this.adminService.getAdminDepartments(adminId);
+     }
+
+     @Put(":adminId/:departmentId")
+     @UsePipes(new ValidationPipe())
+     async updateDepartment(
+       @Param('adminId') adminId: string,
+       @Param('departmentId') departmentId: string,
+       @Body() updateDto: UpdateDepartmentDto
+     ): Promise<Department> {
+       return this.adminService.updateDepartment(adminId, departmentId, updateDto);
+     }
+
+    // c:\Users\MSI\Desktop\project_backend\office-management\src\admin\admin.controller.ts
+
+@Delete(':adminId/:departmentId')
+async deleteDepartment(
+  @Param('adminId') adminId: string,
+  @Param('departmentId') departmentId: string
+): Promise<{ message: string }> {
+  await this.adminService.deleteDepartment(adminId, departmentId);
+  return { message: 'Department deleted successfully' };
+
+}
+
+@Get('departments')
+async getDepartment(): Promise<Department[]> {
+  return this.adminService.getDepartment();
+}
+
 
 
 }

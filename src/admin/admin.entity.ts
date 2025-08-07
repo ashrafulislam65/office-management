@@ -1,11 +1,15 @@
-import { BeforeInsert, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn ,OneToMany} from "typeorm";
 import * as bcrypt from 'bcrypt';
+
 import { BadRequestException } from "@nestjs/common";
+import { Department } from "./department.entity";
 
 @Entity("admin")
 export class AdminEntity {
+
+   
     @PrimaryGeneratedColumn('uuid')
-    adminId: string;
+    adminId: string ;
   
     // @Column({ type: 'varchar', length: 100, unique: true })
     // email: string;
@@ -34,7 +38,7 @@ export class AdminEntity {
 
     @Column({length:100,nullable:true})
     fullName: string;
-
+   
     @Column({unsigned:true,type:'bigint',unique:true})
     phone:bigint
 
@@ -50,6 +54,9 @@ export class AdminEntity {
             throw new BadRequestException('invalid phone number');
          }
     }
+
+    @OneToMany(() => Department,department=> department.admin)
+    departments: Department[];
     
 
 }

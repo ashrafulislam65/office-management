@@ -7,15 +7,26 @@ import { AdminEntity } from "./admin.entity";
 import { CreateUserDto } from "./admin.dto";
 //import { UpdateAdminDto } from "./update-user.dto";
 import{ UpdateAdminDto } from "./update-admin.dto";
+import { CreateDepartmentDto,UpdateDepartmentDto} from "./department.dto";
+import { Department } from "./department.entity";
+import { Employees } from "../employees/employees.entity";
+
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { isUUID } from "class-validator";
+import { CreateEmployeesDto } from "src/employees/employees.dto";
 
 @Injectable()
 export class AdminService {
-    // deleteAdmin(id: string): void | PromiseLike<void> {
-    //     throw new Error("Method not implemented.");
-    // }
+    
+    constructor(
+        @InjectRepository(AdminEntity)
+        private adminRepo: Repository<AdminEntity>,
+        @InjectRepository(Department)
+        private departmentRepo: Repository<Department>,
+        @InjectRepository(Employees)
+        private employeeRepo: Repository<Employees>
+    ) {}
 
 // private users:User[] = [];
 
@@ -62,10 +73,7 @@ export class AdminService {
 
 
 
-    constructor(
-        @InjectRepository(AdminEntity)
-        private adminRepo: Repository<AdminEntity>
-    ) {}
+    // constructor replaced above
 
 //     async createAdmin(adminData: CreateUserDto, nidImagePath: string): Promise<AdminEntity> {
         
@@ -201,11 +209,10 @@ export class AdminService {
       }
       
         async getAdminwithFullName(fullName: string): Promise<AdminEntity[]> {
-          
+
             return this.adminRepo.find({
-                where:{fullName:IsNull()},
+                where: { fullName },
                 order: { createdAt: 'DESC' }
-        
             });
         }
 
@@ -231,11 +238,9 @@ export class AdminService {
 
         async getAllAdmins(): Promise<AdminEntity[]> {
             return this.adminRepo.find({
-                 order: { createdAt: 'DESC' },
-        });
-        
-
-    }
+                order: { createdAt: 'DESC' },
+            });
+        }
 
     async getAdminWithNullFullName(): Promise<AdminEntity[]> {
         const admins = await this.adminRepo.find({
@@ -249,4 +254,149 @@ export class AdminService {
 
         return admins;
     }
+
+
+
+    // async createDepartment(departmentDto: CreateDepartmentDto): Promise<Department> {
+    //     const admin = await this.adminRepo.findOneBy({
+    //         adminId: departmentDto.adminid
+    //     });
+
+    //     if(!admin) {
+    //         throw new NotFoundException(`Admin with ID ${departmentDto.adminid} not found`);
+    //     }
+
+    //     // Verify employee exists
+    //     const employeeExists = await this.departmentRepo.findOneBy({
+    //         employeeId: parseInt(departmentDto.employeesid)
+    //     });
+
+    //     if(!employeeExists) {
+    //         throw new NotFoundException(`Employee with ID ${departmentDto.employeeId} not found`);
+    //     }
+
+    //     // Create and save department with proper type handling
+    //     const department = this.departmentRepo.create({
+    //         ...departmentDto,
+    //         admin: admin
+    //     });
+
+    //     return await this.departmentRepo.save(department);
+    // }
+    async createDepartment(adminId: string, createDto: CreateDepartmentDto): Promise<Department> {
+        const admin = await this.adminRepo.findOne({ where: {adminId } });
+        if (!admin) {
+            throw new NotFoundException(`Admin with ID ${adminId} not found`);
+        }
+
+        const employee = await this.employeeRepo.findOne({
+            where: { id: createDto.employeeId },
+        });
+        if (!employee) {
+            throw new NotFoundException(`Employee with ID ${createDto.employeeId} not found`);
+        }
+
+        const department = this.departmentRepo.create({
+            departmentType: createDto.departmentType,
+            role: createDto.role,
+            admin: admin,
+            employee: employee,
+            joiningDate: createDto.joiningDate || new Date(),
+            isActive: createDto.isActive !== undefined ? createDto.isActive : true,
+        });
+
+        return this.departmentRepo.save(department);
+    }
+
+async getDepartment(): Promise<Department[]> {
+  return this.departmentRepo.find();
 }
+
+
+ async getAdminDepartments(adminId: string): Promise<Department[]> {
+    return this.departmentRepo.find({
+        where:{admin:{adminId}},
+        relations: ['admin', 'employee'],
+    });
+
+}
+
+async getDepartmentById(id: string, departmentId: string): Promise<Department | null> {
+    return this.departmentRepo.findOne({
+        where: { admin: { adminId: id }, id: departmentId },
+        relations: ['admin', 'employee'],
+    });
+}
+
+async updateDepartment(
+  adminId: string,
+  departmentId: string,
+  updateDto: UpdateDepartmentDto
+): Promise<Department> {
+  const department = await this.departmentRepo.findOne({
+    where: { id: departmentId, admin: { adminId } }
+  });
+  
+  if (!department) {
+    throw new NotFoundException('Department not found');
+  }
+
+  // Update employee reference if needed
+  if (updateDto.employeeId) {
+    const employee = await this.employeeRepo.findOne({
+      where: { id: updateDto.employeeId }
+    });
+    if (!employee) {
+      throw new NotFoundException(`Employee with ID ${updateDto.employeeId} not found`);
+    }
+    department.employee = employee;
+  }
+
+  // Update other fields
+  if (updateDto.departmentType) {
+    department.departmentType = updateDto.departmentType;
+  }
+  if (updateDto.role) {
+    department.role = updateDto.role;
+  }
+  if (updateDto.joiningDate) {
+    department.joiningDate = updateDto.joiningDate;
+  }
+  if (updateDto.isActive !== undefined) {
+    department.isActive = updateDto.isActive;
+  }
+
+  return this.departmentRepo.save(department);
+}
+
+
+//   async getDepartmentById(id:number): Promise<Department> {
+//     const department = await this.departmentRepo.findOneBy({ id });
+//     if (!department) {
+//         throw new NotFoundException(`Department with ID ${id} not found`);
+//     }
+//     return department;
+// }
+
+//     async updateDepartment(id: number, departmentDto: DepartmentDto): Promise<Department> {
+//         const department = await this.getDepartmentById(id);
+    
+//         // Update fields
+//         department.employeeId = parseInt(departmentDto.employeeId);
+//         department.department = departmentDto.department;
+//         department.role = departmentDto.role;
+    
+//         return this.departmentRepo.save(department);
+//     }
+    
+      async deleteDepartment(adminId: string, departmentId: string): Promise<void> {
+    const result = await this.departmentRepo.delete({
+      id: departmentId,
+      admin: { adminId }
+    });
+    if (result.affected === 0) {
+      throw new NotFoundException(`Department not found or not owned by admin`);
+    }
+  }
+
+    }
