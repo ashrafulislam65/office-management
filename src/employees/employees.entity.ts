@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
 
 @Entity()
 export class Employees {
@@ -11,11 +11,15 @@ export class Employees {
     @Column({ unsigned: true })
     age: number;
 
-    @Column({ default: 'active' })
+    @Column({ 
+        type: 'varchar',
+        length: 10,
+        default: 'active'
+    })
     status: 'active' | 'inactive';
 
-    // Additional fields you might need
     @Column()
+    @Index({ unique: true }) // This makes email unique and creates an index
     email: string;
 
     @Column()
@@ -26,4 +30,10 @@ export class Employees {
 
     @Column()
     phoneNumber: string;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    salary: number;
+
+    @Column({nullable: true})
+    department: string;
 }

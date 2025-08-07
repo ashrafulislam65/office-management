@@ -14,8 +14,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       username: 'office_management_taln_user',
       password: 'jHyLtss6t2w1s0DWYwMYn25tnmoT0GE2',
       database: 'office_management_taln',
-      autoLoadEntities: true,  // This will automatically load your entities
-      synchronize: true,       // Be careful with this in production
+      autoLoadEntities: true,  
+      synchronize: true,       
       extra: {
         ssl: {
           rejectUnauthorized: false,
