@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, Matches, IsIn, IsNumberString, Length, IsString, IsInt, Min, MaxLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, Matches, IsIn, IsNumberString, Length, IsString, IsInt, Min, MaxLength, IsOptional, IsDecimal } from 'class-validator';
 
 export class CreateEmployeesDto {
     @IsString()
@@ -30,6 +30,14 @@ export class CreateEmployeesDto {
     @IsNumberString()
     @Length(11, 15)
     phoneNumber: string;
+
+    @IsOptional()
+    @IsDecimal()
+    salary?: number;
+
+    @IsOptional()
+    @IsString()
+    department?: string;
 }
 
 export class UpdateEmployeesStatusDto {

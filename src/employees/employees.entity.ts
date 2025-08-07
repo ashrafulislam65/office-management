@@ -34,6 +34,6 @@ export class Employees {
     @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
     salary: number;
 
-    @Column({nullable: true})
+    @Column({nullable: true, default: 'General'})
     department: string;
 }
