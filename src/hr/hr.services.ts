@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { CreateHrDto } from './dto/hr.dto';
 import { InjectRepository } from "@nestjs/typeorm";
 import { ILike, Repository } from "typeorm";
@@ -7,6 +7,10 @@ import { Employees } from "src/employees/employees.entity";
 import { CreateEmployeesDto } from "src/employees/employees.dto";
 import { TaskEntity } from "./hr.hrTaskEntity";
 import { CreateHrTaskDto } from "./dto/hr.hrTaskDto";
+import { AttendanceEntity } from "./hr.attendanceEntity";
+import { CreateAttendanceDto } from "./dto/hr.attendanceDto";
+import { SalaryEntity } from "./hr.salaryEntity";
+import { CreateSalaryDto, UpdateSalaryDto } from "./dto/hr.salaryDto";
 
 
 @Injectable()
@@ -21,6 +25,12 @@ export class HrService{
 
         @InjectRepository(TaskEntity)
         private readonly taskRepository: Repository<TaskEntity>,
+
+        @InjectRepository(AttendanceEntity)
+        private readonly attendanceRepository: Repository<AttendanceEntity>,
+
+        @InjectRepository(SalaryEntity)
+        private readonly salaryRepository: Repository<SalaryEntity>,
     ){}
     getDashboardData():string{
         return 'Dashboard data for HR.'
@@ -113,6 +123,8 @@ export class HrService{
         }
     }
 
+
+    //Assgin Task
     async assignTask(dto: CreateHrTaskDto): Promise<any> {
         const employee = await this.employeeRepository.findOne({ where: { id: dto.employeeId } });
         if (!employee) {
@@ -137,35 +149,168 @@ export class HrService{
             status: dto.status || 'pending',
         });
 
-        // Save the task to DB
         const savedTask = await this.taskRepository.save(task);
+        return await this.taskRepository.save(task);
+
 
     
     }
 
-    
-    async getAllTasks(): Promise<TaskEntity[]> {
-        return await this.taskRepository.find();
-    }
 
-    async getTasksByEmployee(employeeId: number): Promise<TaskEntity[]> {
+    //get task by hr id
+    async getTasksByHrId(hrId: number): Promise<TaskEntity[]> {
         return await this.taskRepository.find({
-            where: { employee: { id: employeeId } },
-        });
-    }
-
-    async getHrIdsAndNames(): Promise<{ id: number; fullName: string }[]> {
-        return await this.hrRepository.find({
-            select: ['id', 'fullName'],
+            where: { assignedBy: { id: hrId } },
+            relations: ['employee', 'assignedBy'], 
         });
     }
 
 
-    async getEmployeeIdsAndNames(): Promise<{ id: number; fullName: string }[]> {
-        return await this.employeeRepository.find({
-            select: ['id', 'fullName'],
+
+    //Update task
+    async updateTask(id: number, dto: Partial<TaskEntity>): Promise<TaskEntity> {
+        const task = await this.taskRepository.findOne({ where: { id } });
+
+        if (!task) {
+            throw new NotFoundException(`Task with ID ${id} not found`);
+        }
+
+        Object.assign(task, dto); // merge changes
+
+        return await this.taskRepository.save(task);
+    }
+
+    //Delete task
+    async deleteTask(id: number): Promise<{ message: string }> {
+        const task = await this.taskRepository.findOne({ where: { id } });
+        if (!task) {
+            throw new NotFoundException(`Task with ID ${id} not found`);
+        }
+
+        await this.taskRepository.remove(task);
+        return { message: `Task with ID ${id} deleted successfully` };
+    }
+
+
+
+    //Attendance
+    async markAttendance(dto: CreateAttendanceDto): Promise<AttendanceEntity> {
+    const employee = await this.employeeRepository.findOne({ where: { id: dto.employeeId } });
+
+    if (!employee) {
+        throw new NotFoundException('Employee not found');
+    }
+
+    const attendance = this.attendanceRepository.create({
+        employee,
+        empFullName: employee.fullName,
+        date: dto.date,
+        status: dto.status || 'present',
+        checkInTime: dto.checkInTime,
+        checkOutTime: dto.checkOutTime,
+    });
+
+    return this.attendanceRepository.save(attendance);
+    }
+
+    //Get Attendance
+    async getAttendance(): Promise<AttendanceEntity[]> {
+    return this.attendanceRepository.find({});
+    }
+
+
+    //Get Attendance buy employee Id
+    async getAttendanceByEmployee(id: number): Promise<AttendanceEntity[]> {
+    return this.attendanceRepository.find({
+        where: { employee: { id } },
+        order: { date: 'DESC' }
+    });
+    }
+
+    //update attendance
+    async updateAttendance(id: number, updateData: Partial<AttendanceEntity>): Promise<AttendanceEntity> {
+    const attendance = await this.attendanceRepository.findOneBy({ id });
+    if (!attendance) {
+        throw new NotFoundException(`Attendance with ID ${id} not found`);
+    }
+
+    Object.assign(attendance, updateData);
+    return this.attendanceRepository.save(attendance);
+    }
+
+    //delete attendace
+    async deleteAttendance(id: number): Promise<void> {
+    const result = await this.attendanceRepository.delete(id);
+    if (result.affected === 0) {
+        throw new NotFoundException(`Attendance with ID ${id} not found`);
+    }
+    }
+
+
+    //Create salary
+    async createSalary(salaryDto: CreateSalaryDto): Promise<SalaryEntity> {
+        const employee = await this.employeeRepository.findOneBy({ id: salaryDto.employeeId });
+        if (!employee) {
+            throw new NotFoundException(`Employee with ID ${salaryDto.employeeId} not found`);
+        }
+
+        const hr = await this.hrRepository.findOneBy({ id: salaryDto.paidById });
+        if (!hr) {
+            throw new NotFoundException(`HR with ID ${salaryDto.paidById} not found`);
+        }
+
+        const salary = this.salaryRepository.create({
+            amount: salaryDto.amount,
+            payDate: salaryDto.payDate,
+            paymentMethod: salaryDto.paymentMethod,
+            bonus: salaryDto.bonus,
+            employee: employee,
+            paidBy: hr,
+        });
+
+        return this.salaryRepository.save(salary);
+    }
+
+
+    async getAll(): Promise<SalaryEntity[]> {
+        return this.salaryRepository.find();
+    }
+
+    async getSalaryById(id: number): Promise<SalaryEntity> {
+    const salary = await this.salaryRepository.findOneBy({ id });
+    if (!salary) {
+        throw new NotFoundException(`Salary record not found for ID ${id}`);
+    }
+    return salary;
+}
+
+    async updateSalary(id: number, updateSalaryDto: UpdateSalaryDto): Promise<SalaryEntity> {
+        await this.salaryRepository.update(id, updateSalaryDto);
+        const updatedSalary = await this.salaryRepository.findOneBy({ id });
+
+        if (!updatedSalary) {
+            throw new NotFoundException(`Salary with ID ${id} not found`);
+        }
+
+        return updatedSalary;
+    }
+
+
+    async deleteSalary(id: number): Promise<void> {
+        await this.salaryRepository.delete(id);
+    }
+
+    async getSalariesByEmployeeId(employeeId: number): Promise<SalaryEntity[]> {
+        return this.salaryRepository.find({
+        where: { employee: { id: employeeId } },
         });
     }
+
+
+
+
+
+
 
 
 

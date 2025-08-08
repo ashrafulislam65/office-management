@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { HrService } from './hr.services';
 import { CreateHrDto } from './dto/hr.dto';
 import { FileInterceptor } from "@nestjs/platform-express";
@@ -9,6 +9,10 @@ import { HrEntity } from "./hr.entity";
 import { Employees } from "src/employees/employees.entity";
 import { CreateEmployeesDto } from "src/employees/employees.dto";
 import { CreateHrTaskDto } from "./dto/hr.hrTaskDto";
+import { TaskEntity } from "./hr.hrTaskEntity";
+import { CreateAttendanceDto } from "./dto/hr.attendanceDto";
+import { AttendanceEntity } from "./hr.attendanceEntity";
+import { CreateSalaryDto, UpdateSalaryDto } from "./dto/hr.salaryDto";
 
 
 
@@ -19,7 +23,6 @@ export class HrController{
     constructor(private readonly hrService: HrService){}
 
     @Post()
-    @UsePipes(new ValidationPipe())
     async createHr(@Body() createHrDto: CreateHrDto){
         return await this.hrService.createHr(createHrDto);
     }
@@ -64,7 +67,6 @@ export class HrController{
 
     //Create new Employee
     @Post('create-employee')
-    @UsePipes(new ValidationPipe({ whitelist: true }))
     async createEmployee(@Body() employeeData: CreateEmployeesDto): Promise<Employees> {
     return this.hrService.createEmployee(employeeData);
     }
@@ -83,16 +85,7 @@ export class HrController{
         return { message: `User with username "${id}" has been removed` };
     }
 
-    @Get('ids')
-    async getHrIdsAndNames() {
-        return this.hrService.getHrIdsAndNames();
-    }
 
-    // Get Employee IDs & Names
-    @Get('employees/ids')
-    async getEmployeeIdsAndNames() {
-        return this.hrService.getEmployeeIdsAndNames();
-    }
 
     // Assign Task to Employee
     @Post('assign-task')
@@ -100,17 +93,105 @@ export class HrController{
         return this.hrService.assignTask(dto);
     }
 
-    // Get All Tasks
-    @Get('tasks')
-    async getAllTasks() {
-        return this.hrService.getAllTasks();
+    // Get tasks by hr id
+    @Get('tasks/hr/:id')
+    getTasksByHr(@Param('id', ParseIntPipe) id: number) {
+        return this.hrService.getTasksByHrId(id);
     }
 
-    // Get Tasks for Specific Employee
-    @Get('tasks/employee/:id')
-    async getTasksByEmployee(@Param('id') employeeId: number) {
-        return this.hrService.getTasksByEmployee(employeeId);
+    //Update task
+    @Patch('tasks/update/:id')
+    updateTask(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<TaskEntity>) {
+        return this.hrService.updateTask(id, dto);
     }
+
+    //delete task
+    @Delete('tasks/delete/:id')
+    async deleteTask(@Param('id', ParseIntPipe) id: number) {
+        return await this.hrService.deleteTask(id);
+    }
+
+    //Post attendance
+    @Post('attendance')
+    async markAttendance(@Body() dto: CreateAttendanceDto) {
+    return this.hrService.markAttendance(dto);
+    }
+
+    //get attendance
+    @Get('attendance')
+    async getAttendace(){
+        return this.hrService.getAttendance();
+    }
+
+
+    //Get Attendance by id
+    @Get('attendance/:employeeId')
+    async getEmployeeAttendance(@Param('employeeId') id: number) {
+    return this.hrService.getAttendanceByEmployee(id);
+    }
+
+    //update attendance
+    @Patch('attendance/update/:id')
+    updateAttendance(@Param('id', ParseIntPipe) id: number, @Body() body: Partial<AttendanceEntity>) {
+    return this.hrService.updateAttendance(id, body);
+    }
+
+    //delete attendance
+    @Delete('attendance/delete/:id')
+    deleteAttendance(@Param('id', ParseIntPipe) id: number) {
+    return this.hrService.deleteAttendance(id);
+    }
+
+    //create salary
+    @Post('salary')
+    createSalary(@Body() dto: CreateSalaryDto) {
+        return this.hrService.createSalary(dto);
+    }
+
+
+    //get all salary
+    @Get('salary')
+    getAllSalary() {
+        return this.hrService.getAll();
+    }
+
+
+
+    //get salary by id
+    @Get('salary/id/:id')
+    getSalaryById(@Param('id') id: number) {
+        return this.hrService.getSalaryById(id);
+    }
+
+
+    //update salary
+    @Patch('salary/update/:id')
+    updateSalary(@Param('id') id: number, @Body() dto: UpdateSalaryDto) {
+        return this.hrService.updateSalary(id, dto);
+    }
+
+    //delete all salary
+    @Delete('salary/delete/:id')
+    deleteSalary(@Param('id') id: number) {
+        return this.hrService.deleteSalary(id);
+    }
+
+
+    //get salary by employee id
+    @Get('salary/employee/:employeeId')
+    getSalaryByEmployee(@Param('employeeId') employeeId: number) {
+        return this.hrService.getSalariesByEmployeeId(employeeId);
+    }
+
+
+    
+
+
+
+
+
+
+
 
 
 

@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { Employees } from '../employees/employees.entity';
 import { HrEntity } from './hr.entity';
+import { AttendanceEntity } from './hr.attendanceEntity';
 
 @Entity('hr_task')
 export class TaskEntity {
@@ -33,4 +34,8 @@ export class TaskEntity {
 
     @Column({ default: 'pending' })
     status: string;
+
+    @OneToMany(() => AttendanceEntity, (attendance) => attendance.employee)
+    attendance: AttendanceEntity[];
+
 }

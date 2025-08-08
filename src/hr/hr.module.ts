@@ -5,11 +5,13 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { HrEntity } from "./hr.entity";
 import { Employees } from "src/employees/employees.entity";
 import { TaskEntity } from "./hr.hrTaskEntity";
+import { AttendanceEntity } from "./hr.attendanceEntity";
+import { SalaryEntity } from "./hr.salaryEntity";
 
 
 
 @Module({
-    imports: [ TypeOrmModule.forFeature([HrEntity, Employees, TaskEntity]),],
+    imports: [ TypeOrmModule.forFeature([HrEntity, Employees, TaskEntity, AttendanceEntity, SalaryEntity]),],
     controllers:[HrController],
     providers: [HrService],
 })
