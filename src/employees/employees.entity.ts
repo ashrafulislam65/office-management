@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, UpdateDateColumn, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Index, UpdateDateColumn, CreateDateColumn, OneToMany } from 'typeorm';
+import { Leave } from './leave.entity';
 export enum EmployeeStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive'
@@ -46,4 +47,6 @@ export class Employees {
     
     @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
     updatedAt: Date;
+     @OneToMany(() => Leave, leave => leave.employee)
+    leaves: Leave[];
 }

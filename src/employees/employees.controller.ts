@@ -2,6 +2,9 @@ import { Body, Controller, Get, Post, Put, Param, UsePipes, ValidationPipe, Pars
 import { EmployeesService } from './employees.service';
 import { CreateEmployeesDto, UpdateEmployeesStatusDto } from './employees.dto';
 import { Employees } from './employees.entity';
+//import { Department } from "../employees/department.entity";
+//import { CreateDepartmentDto, UpdateDepartmentDto } from "../employees/department.dto";
+//import { AdminEntity } from '../employees/admin.entity';
 
 @Controller('employees')
 export class EmployeesController {
@@ -60,4 +63,10 @@ async findByEmail(@Param('email') email: string): Promise<Employees | null> {
     }
     return employee;
 }
+
+// @Get('departments-all') 
+//   async getAllDepartments(): Promise<Department[]> {
+//     return await this.employeesService.getAllDepartments();
+//   }
+
 }
