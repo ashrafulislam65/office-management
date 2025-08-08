@@ -13,6 +13,12 @@ export class SalaryEntity {
   @ManyToOne(() => HrEntity, (hr) => hr.id, { eager: true })
   paidBy: HrEntity;
 
+  @Column({nullable:true})
+  empFullName: string;
+
+  @Column({nullable:true})
+  paidByFullName: string;
+
   @Column()
   amount: number;
 

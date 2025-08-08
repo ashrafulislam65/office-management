@@ -15,6 +15,12 @@ export class CreateSalaryDto {
   @IsString()
   paymentMethod: string;
 
+  @IsNotEmpty()
+  empFullName;
+
+  @IsNotEmpty()
+  paidByFullName;
+
   @IsNumber()
   bonus?: number;
 

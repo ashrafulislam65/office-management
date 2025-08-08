@@ -266,6 +266,8 @@ export class HrService{
             bonus: salaryDto.bonus,
             employee: employee,
             paidBy: hr,
+            empFullName: employee.fullName,
+            paidByFullName: hr.fullName,
         });
 
         return this.salaryRepository.save(salary);
