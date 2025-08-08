@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Employees } from './employees.entity';
+import { Employees, EmployeeStatus } from './employees.entity';
 import { CreateEmployeesDto, UpdateEmployeesStatusDto } from './employees.dto';
 
 @Injectable()
@@ -15,10 +15,15 @@ export class EmployeesService {
         try {
             const employee = this.employeesRepository.create({
                 ...createEmployeesDto,
-                status: 'active'
+                status: EmployeeStatus.ACTIVE, 
+                salary: createEmployeesDto.salary || 0,
+                department: createEmployeesDto.department || 'General'
             });
             return await this.employeesRepository.save(employee);
         } catch (error) {
+            if (error.code === '23505') {
+                throw new BadRequestException('Email already exists');
+            }
             throw new BadRequestException('Failed to create employee');
         }
     }
@@ -28,10 +33,6 @@ export class EmployeesService {
     }
 
     async findOne(id: number): Promise<Employees> {
-        if (isNaN(id)) {
-            throw new BadRequestException('Invalid employee ID');
-        }
-
         const employee = await this.employeesRepository.findOne({ 
             where: { id }
         });
@@ -42,28 +43,28 @@ export class EmployeesService {
         return employee;
     }
 
-    async updateStatus(id: number, updateEmployeesStatusDto: UpdateEmployeesStatusDto): Promise<Employees> {
-        const employee = await this.findOne(id); // Reuse findOne which includes validation
-        employee.status = updateEmployeesStatusDto.status;
+    async updateStatus(id: number, updateDto: UpdateEmployeesStatusDto): Promise<Employees> {
+        const employee = await this.findOne(id);
+        employee.status = updateDto.status;
         return this.employeesRepository.save(employee);
     }
 
-   async findInactiveEmployees(): Promise<Employees[]> {
-    try {
-        return await this.employeesRepository.find({ 
-            where: { status: 'inactive' }
+    async findInactiveEmployees(): Promise<Employees[]> {
+        return this.employeesRepository.find({
+            where: {
+                status: EmployeeStatus.INACTIVE
+            }
         });
-    } catch (error) {
-        console.error('Error fetching inactive employees:', error);
-        throw new BadRequestException('Could not fetch inactive employees');
     }
-}
 
     async findEmployeesOlderThan40(): Promise<Employees[]> {
-        return this.employeesRepository
-            .createQueryBuilder('employee')
+        return this.employeesRepository.createQueryBuilder('employee')
             .where('employee.age > :age', { age: 40 })
-            
             .getMany();
+    }
+
+    async findByEmail(email: string): Promise<Employees | undefined> {
+        const employee = await this.employeesRepository.findOne({ where: { email } });
+        return employee === null ? undefined : employee;
     }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Put, Param, UsePipes, ValidationPipe, ParseIntPipe, Query, HttpException, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Param, UsePipes, ValidationPipe, ParseIntPipe, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeesDto, UpdateEmployeesStatusDto } from './employees.dto';
 import { Employees } from './employees.entity';
@@ -42,21 +42,22 @@ export class EmployeesController {
         return this.employeesService.updateStatus(id, updateEmployeesStatusDto);
     }
 
-   @Get('inactive')
+   
+@Get('inactive')
 async findInactiveEmployees(): Promise<Employees[]> {
-    try {
-        return await this.employeesService.findInactiveEmployees();
-    } catch (error) {
-        throw new HttpException({
-            status: HttpStatus.BAD_REQUEST,
-            error: 'Failed to fetch inactive employees',
-            details: error.message
-        }, HttpStatus.BAD_REQUEST);
-    }
+  return this.employeesService.findInactiveEmployees();
 }
 
     @Get('older-than-40')
     async findEmployeesOlderThan40(): Promise<Employees[]> {
         return this.employeesService.findEmployeesOlderThan40();
     }
+    @Get('email/:email')
+async findByEmail(@Param('email') email: string): Promise<Employees | null> {
+    const employee = await this.employeesService.findByEmail(email);
+    if (!employee) {
+        throw new NotFoundException(`Employee with email ${email} not found`);
+    }
+    return employee;
+}
 }
