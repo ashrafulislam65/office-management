@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, Index, UpdateDateColumn, CreateDateColumn, OneToMany } from 'typeorm';
 import { Leave } from './leave.entity';
+import { Exclude } from 'class-transformer';
 export enum EmployeeStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive'
@@ -27,7 +28,8 @@ export class Employees {
     @Index({ unique: true }) // This makes email unique and creates an index
     email: string;
 
-    @Column()
+     @Column()
+    @Exclude() // This will exclude the password from serialization
     password: string;
 
     @Column()
@@ -41,6 +43,8 @@ export class Employees {
 
     @Column({nullable: true, default: 'General'})
     department: string;
+     @Column({ nullable: true })
+    photoUrl: string; 
     @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     createdAt: Date;
 

@@ -1,12 +1,13 @@
-import { Body, Controller, Get, Post, Put, Param, UsePipes, ValidationPipe, ParseIntPipe, HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Param, UsePipes, ValidationPipe, ParseIntPipe, HttpException, HttpStatus, NotFoundException, UseInterceptors, ClassSerializerInterceptor } from '@nestjs/common';
 import { EmployeesService } from './employees.service';
-import { CreateEmployeesDto, UpdateEmployeesStatusDto } from './employees.dto';
+import { ChangePasswordDto, CreateEmployeesDto, UpdateEmployeeProfileDto, UpdateEmployeesStatusDto } from './employees.dto';
 import { Employees } from './employees.entity';
 //import { Department } from "../employees/department.entity";
 //import { CreateDepartmentDto, UpdateDepartmentDto } from "../employees/department.dto";
 //import { AdminEntity } from '../employees/admin.entity';
 
 @Controller('employees')
+@UseInterceptors(ClassSerializerInterceptor) 
 export class EmployeesController {
     constructor(private readonly employeesService: EmployeesService) {}
 
@@ -68,5 +69,49 @@ async findByEmail(@Param('email') email: string): Promise<Employees | null> {
 //   async getAllDepartments(): Promise<Department[]> {
 //     return await this.employeesService.getAllDepartments();
 //   }
+
+    @Put(':id/profile')
+    @UsePipes(new ValidationPipe())
+    async updateProfile(
+        @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST })) id: number,
+        @Body() updateDto: UpdateEmployeeProfileDto,
+    ): Promise<Employees> {
+        return this.employeesService.updateProfile(id, updateDto);
+    }
+
+    @Put(':id/photo')
+    async updatePhoto(
+        @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST })) id: number,
+        @Body('photoUrl') photoUrl: string,
+    ): Promise<Employees> {
+        if (!photoUrl) {
+            throw new HttpException('Photo URL is required', HttpStatus.BAD_REQUEST);
+        }
+        return this.employeesService.updatePhoto(id, photoUrl);
+    }
+
+    @Put(':id/change-password')
+@UsePipes(new ValidationPipe())
+async changePassword(
+    @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST })) id: number,
+    @Body() changePasswordDto: ChangePasswordDto,
+): Promise<{ message: string }> {
+    const employee = await this.employeesService.findOne(id);
+    
+    // Verify current password
+    const isPasswordValid = await this.employeesService.verifyPassword(
+        changePasswordDto.currentPassword,
+        employee.password
+    );
+    
+    if (!isPasswordValid) {
+        throw new HttpException('Current password is incorrect', HttpStatus.BAD_REQUEST);
+    }
+    
+    // Update to new password
+    await this.employeesService.updatePassword(id, changePasswordDto.newPassword);
+    
+    return { message: 'Password changed successfully' };
+}
 
 }

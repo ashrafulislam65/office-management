@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsIn, IsInt, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString, Length, Matches, Max, MaxLength, Min } from "class-validator";
+import { IsEmail, IsEnum, IsIn, IsInt, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString, IsUrl, Length, Matches, Max, MaxLength, Min } from "class-validator";
 
 export enum EmployeeStatus {
     ACTIVE = 'active',
@@ -78,4 +78,38 @@ export class UpdateEmployeesStatusDto {
         message: `Status must be one of: ${Object.values(EmployeeStatus).join(', ')}` 
     })
     status: EmployeeStatus;
+}
+
+export class UpdateEmployeeProfileDto {
+    @IsOptional()
+    @IsString()
+    @MaxLength(100, { message: 'Full name must be shorter than or equal to 100 characters' })
+    fullName?: string;
+
+    @IsOptional()
+    @IsString()
+    phoneNumber?: string;
+
+    @IsOptional()
+    @IsString()
+    department?: string;
+
+    @IsOptional()
+    @IsString()
+    @IsUrl()
+    photoUrl?: string; // URL to the uploaded photo
+}
+export class ChangePasswordDto {
+    @IsNotEmpty()
+    @IsString()
+    currentPassword: string;
+
+    @IsNotEmpty()
+    @IsString()
+    @Length(8, 30)
+    @Matches(/(?=.*[A-Z])/, { message: 'Must contain at least one uppercase letter' })
+    @Matches(/(?=.*[a-z])/, { message: 'Must contain at least one lowercase letter' })
+    @Matches(/(?=.*\d)/, { message: 'Must contain at least one number' })
+    @Matches(/(?=.*[!@#$%^&*])/, { message: 'Must contain at least one special character' })
+    newPassword: string;
 }
