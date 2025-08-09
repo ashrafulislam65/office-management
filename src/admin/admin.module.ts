@@ -22,13 +22,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminEntity } from './admin.entity';
 import { Department } from './department.entity';
 import { Employees } from '../employees/employees.entity'; // Add this import
+import { Memorandum } from './memorandum.entity';
+import{ Task } from './task.entity'; // Import Task entity
+import { HrEntity } from 'src/hr/hr.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       AdminEntity, 
       Department,
-      Employees // Add this entity
+      Employees,
+      Memorandum ,
+      Task,
+      HrEntity
+
     ])
   ],
   controllers: [AdminController],

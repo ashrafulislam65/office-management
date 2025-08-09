@@ -3,6 +3,9 @@ import * as bcrypt from 'bcrypt';
 
 import { BadRequestException } from "@nestjs/common";
 import { Department } from "./department.entity";
+import { Memorandum } from "./memorandum.entity";
+import { Employees } from "src/employees/employees.entity";
+import { Task } from "./task.entity";
 
 @Entity("admin")
 export class AdminEntity {
@@ -32,7 +35,7 @@ export class AdminEntity {
 
 
 
-    @Column({default:true,type:'varchar'})
+    @Column({default:true,type:'boolean'})
     isActive: boolean;
 
 
@@ -42,21 +45,43 @@ export class AdminEntity {
     @Column({unsigned:true,type:'bigint',unique:true})
     phone:bigint
 
+
+    @Column({select:false})
+      password: string;
+
+
      @CreateDateColumn()
      createdAt: Date;
+    memorandums: any;
 
     @BeforeInsert()
-    validatePhone(){
+    async validatePhone(){
          try {
             this.phone && this.phone > 0;
          }
          catch (error) {
             throw new BadRequestException('invalid phone number');
          }
+
+         if(this.password){
+            const salt=await bcrypt.genSalt();
+            this.password=await bcrypt.hash(this.password,salt);
+         }
     }
 
     @OneToMany(() => Department,department=> department.admin)
     departments: Department[];
     
+
+    // admin.entity.ts (add these to your existing AdminEntity)
+ // admin.entity.ts (add these to your existing AdminEntity)
+ // admin.entity.ts (add this to your existing AdminEntity)
+@OneToMany(() => Memorandum, memorandum => memorandum.admin)
+memorandum: Memorandum[];
+
+
+@OneToMany(() => Task, task => task.assignedBy)
+assignedTasks: Task[];
+
 
 }

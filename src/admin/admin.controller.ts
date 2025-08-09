@@ -11,6 +11,9 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateDepartmentDto,UpdateDepartmentDto } from "./department.dto";
 import { Department } from "./department.entity";
+import { CreateMemorandumDto, UpdateMemorandumDto } from "./memorandum.dto";
+import { Memorandum } from "./memorandum.entity";
+import { CreateTaskDto, UpdateTaskDto } from "./task.dto";
 @Controller('admin/users')
 export class AdminController {
     
@@ -76,6 +79,7 @@ export class AdminController {
 // }   
 
      // ...existing code...
+     //admin profile 
     @Post()
     @UsePipes(new ValidationPipe())
     async createAdmin(
@@ -143,7 +147,7 @@ async getAdminwithFullName(@Query('fullName') fullName: string): Promise<AdminEn
     //     return this.adminService.deleteDepartment(id);
     // }
 
-
+//department 
 
  @Post(':adminId')
 async createDepartment(
@@ -187,12 +191,90 @@ async deleteDepartment(
 
 }
 
-@Get('departments')
-async getDepartment(): Promise<Department[]> {
-  return this.adminService.getDepartment();
+@Get('departments/all')
+  async getAllDepartments(): Promise<Department[]> {
+    return this.adminService.getAllDepartments();
+  }
+
+// Create memorandum
+
+   @Post(':adminId/memorandums')
+   @UsePipes(new ValidationPipe())
+async createMemorandum(
+  @Param('adminId') adminId: string,
+  @Body() createDto: CreateMemorandumDto
+): Promise<Memorandum> {
+  return this.adminService.createMemorandum(adminId, createDto);
 }
 
 
+@Get(':adminId/memorandums')
+async getAllMemorandums():Promise<Memorandum[]> {
+  return this.adminService.getAllMemorandums();
+
+
+}
+
+@Get(':adminId/memorandums')
+async getAdminMemorandums(
+  @Param('adminId') adminId: string
+): Promise<Memorandum[]> {
+  return this.adminService.getAdminMemorandums(adminId);
+}
+
+@Patch(':adminId/memorandums/:id')
+@UsePipes(new ValidationPipe())
+async updateMemorandum(
+  @Param('adminId') adminId: string,
+  @Param('id') id: string,
+  @Body() updateDto: UpdateMemorandumDto
+) {
+  return this.adminService.updateMemorandum(adminId, id, updateDto);
+}
+
+
+@Delete(':adminId/memorandums/:id')
+async deleteMemorandum(
+  @Param('adminId') adminId: string,
+  @Param('id') id: string
+) {
+  return this.adminService.deleteMemorandum(adminId, id);
+}
+
+// Create Task for hr
+@Post(':adminId/tasks')
+@UsePipes(new ValidationPipe())
+async createTask(
+  @Param('adminId') adminId: string,
+  @Body() createDto: CreateTaskDto
+) {
+  return this.adminService.createTask(adminId, createDto);
+}
+
+@Get(':adminId/tasks')
+async getAdminTasks(
+  @Param('adminId') adminId: string
+) {
+  return this.adminService.getAdminTasks(adminId);
+}
+
+// @Patch('tasks/:taskId/status')
+// @UsePipes(new ValidationPipe())
+// async updateTaskStatus(
+//   @Param('taskId') taskId: string,
+//   @Body() updateDto: UpdateTaskDto
+// ) {
+//   return this.adminService.updateTaskStatus(taskId, updateDto);
+// }
+
+@Patch('tasks/:taskId')
+@UsePipes(new ValidationPipe())
+async updateTask(
+  @Param('taskId') taskId: string,
+  @Body() updateDto: UpdateTaskDto
+) {
+  return this.adminService.updateTask(taskId, updateDto);
+}
 
 }
      

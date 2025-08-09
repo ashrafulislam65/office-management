@@ -27,6 +27,7 @@ export class Employees {
     @Column()
     phoneNumber: string;
   departments: any;
+    memorandums: any;
 
 
    

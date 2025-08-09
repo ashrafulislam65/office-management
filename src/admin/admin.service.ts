@@ -15,9 +15,16 @@ import { Employees } from "../employees/employees.entity";
 import { InjectRepository } from '@nestjs/typeorm';
 import { isUUID } from "class-validator";
 import { CreateEmployeesDto } from "src/employees/employees.dto";
+import { CreateMemorandumDto, UpdateMemorandumDto } from "./memorandum.dto";
+import { Memorandum } from "./memorandum.entity";
+import { CreateTaskDto, UpdateTaskDto } from "./task.dto";
+import { Task } from "./task.entity";
+import { HrEntity } from "src/hr/hr.entity";
+import { TaskStatus } from './task.entity'; // Add this import
 
 @Injectable()
 export class AdminService {
+    //memorandumRepo: any;
     
     constructor(
         @InjectRepository(AdminEntity)
@@ -25,7 +32,13 @@ export class AdminService {
         @InjectRepository(Department)
         private departmentRepo: Repository<Department>,
         @InjectRepository(Employees)
-        private employeeRepo: Repository<Employees>
+        private employeeRepo: Repository<Employees>,
+        @InjectRepository(Memorandum)
+        private memorandumRepo: Repository<Memorandum>,
+        @InjectRepository(Task)
+        private taskRepo: Repository<Task>,
+        @InjectRepository(HrEntity)
+        private hrRepo: Repository<HrEntity>
     ) {}
 
 // private users:User[] = [];
@@ -171,14 +184,7 @@ export class AdminService {
             throw new UnauthorizedException('Phone number already exists');
         }
 
-
-        
-         const admin = this.adminRepo.create({
-               ...adminData,
-          isActive: adminData.isActive !== undefined ? adminData.isActive : true,
-         fullName: adminData.fullName ?? undefined, 
-});
-
+        const admin = this.adminRepo.create(adminData);
         return await this.adminRepo.save(admin);
       }
 
@@ -283,6 +289,8 @@ export class AdminService {
 
     //     return await this.departmentRepo.save(department);
     // }
+
+    // department
     async createDepartment(adminId: string, createDto: CreateDepartmentDto): Promise<Department> {
         const admin = await this.adminRepo.findOne({ where: {adminId } });
         if (!admin) {
@@ -308,10 +316,15 @@ export class AdminService {
         return this.departmentRepo.save(department);
     }
 
-async getDepartment(): Promise<Department[]> {
-  return this.departmentRepo.find();
-}
+// async getDepartment(): Promise<Department[]> {
+//   return this.departmentRepo.find();
+// }
 
+ async getAllDepartments(): Promise<Department[]> {
+    return this.departmentRepo.find({
+      relations: ['admin', 'employee'] // Include related entities
+    });
+  }
 
  async getAdminDepartments(adminId: string): Promise<Department[]> {
     return this.departmentRepo.find({
@@ -399,4 +412,191 @@ async updateDepartment(
     }
   }
 
+    // async createMemorandum(adminId:string,createDto:CreateMemorandumDto): Promise<Memorandum> {
+    //     const admin = await this.adminRepo.findOne({
+    //         where: { adminId }
+    //     });
+
+    //     if (!admin) {
+    //         throw new NotFoundException(`Admin with ID ${adminId} not found`);
+    //     }
+
+    //     const memorandum = this.memorandumRepo.create({
+    //         ...createDto,
+    //            admin,
+             
+    //     });
+
+    //     return this.memorandumRepo.save(memorandum);
+  
+
+    // }
+
+    // Create memorandum
+    async createMemorandum(adminId: string, createDto: CreateMemorandumDto) {
+    // Verify admin exists
+    const admin = await this.adminRepo.findOne({ 
+      where: { adminId } 
+    });
+    if (!admin) {
+      throw new NotFoundException('Admin not found');
     }
+
+     
+    const memorandum = this.memorandumRepo.create({
+      ...createDto,
+      
+    });
+    
+    return this.memorandumRepo.save(memorandum);
+  }
+   
+    async getAllMemorandums(): Promise<Memorandum[]> {
+        return this.memorandumRepo.find({
+            relations: ['admin'],
+            order: { createdAt: 'DESC' }
+        });
+    }
+
+   async getAdminMemorandums(adminId: string): Promise<Memorandum[]> {
+        return this.memorandumRepo.find({
+            where: { admin: { adminId } },
+            order: { createdAt: 'DESC' },
+   });
+
+}
+     async updateMemorandum(
+  adminId: string,
+  memorandumId: string,
+  updateDto: UpdateMemorandumDto
+): Promise<Memorandum> {
+  const memorandum = await this.memorandumRepo.findOne({
+    where: { id: memorandumId, admin: { adminId } },
+  });
+
+  if (!memorandum) {
+    throw new NotFoundException('Memorandum not found or you are not the owner');
+  }
+
+  if (updateDto.title) {
+    memorandum.title = updateDto.title;
+  }
+  if (updateDto.content) {
+    memorandum.content = updateDto.content;
+  }
+
+  return this.memorandumRepo.save(memorandum);
+}
+
+async deleteMemorandum(adminId: string, memorandumId: string): Promise<void> {
+  const result = await this.memorandumRepo.delete({
+    id: memorandumId,
+    admin: { adminId },
+  });
+
+  if (result.affected === 0) {
+    throw new NotFoundException('Memorandum not found or you are not the owner');
+  }
+
+
+}
+
+  // task assign to hr 
+//    async createTask(adminId: string, createDto: CreateTaskDto): Promise<Task> {
+//   const admin = await this.adminRepo.findOne({ where: { adminId } });
+//   if (!admin) throw new NotFoundException('Admin not found');
+
+//   const hr = await this.hrRepo.findOne({ where: { id: createDto.hrId } });
+//   if (!hr) throw new NotFoundException('HR not found');
+
+//   const task = this.taskRepo.create({
+//     title: createDto.title,
+//     description: createDto.description,
+//     dueDate: new Date(createDto.dueDate),
+//     assignedBy: admin,
+//     submissionUrl: createDto.submissionUrl || null,
+//     status: TaskStatus.PENDING,
+//     assignedTo: hr
+//   });
+
+//   return this.taskRepo.save(task);
+// }
+
+// admin.service.ts
+// async createTask(adminId: string, createDto: CreateTaskDto): Promise<Task> {
+//   const admin = await this.adminRepo.findOne({ where: { adminId } });
+//   if (!admin) throw new NotFoundException('Admin not found');
+
+//   const hr = await this.hrRepo.findOne({ where: { id: createDto.hrId } });
+//   if (!hr) throw new NotFoundException('HR not found');
+
+//   const task = this.taskRepo.create({
+//     title: createDto.title,
+//     description: createDto.description,
+//     dueDate: new Date(createDto.dueDate),
+//     status: TaskStatus.PENDING,
+//     submissionUrl: createDto.submissionUrl || null, // Use provided URL or null
+//     assignedBy: admin,
+//     assignedTo: hr
+//   });
+
+//   return this.taskRepo.save(task);
+// }
+
+
+async createTask(adminId: string, createDto: CreateTaskDto): Promise<Task> {
+  const admin = await this.adminRepo.findOne({ where: { adminId } });
+  if (!admin) throw new NotFoundException('Admin not found');
+
+  const hr = await this.hrRepo.findOne({ where: { id: createDto.hrId } });
+  if (!hr) throw new NotFoundException('HR not found');
+
+  const task = new Task();
+  task.title = createDto.title;
+  task.description = createDto.description;
+  task.dueDate = new Date(createDto.dueDate);
+  task.status = TaskStatus.PENDING;
+  task.submissionUrl = createDto.submissionUrl || null;
+  task.assignedBy = admin;
+  task.assignedTo = hr;
+
+  return this.taskRepo.save(task);
+}
+
+async getAdminTasks(adminId: string): Promise<Task[]> {
+  return this.taskRepo.find({
+    where: { assignedBy: { adminId } },
+    relations: ['assignedTo'],
+    order: { assignDate: 'DESC' }
+  });
+}
+
+// async updateTaskStatus(
+//   taskId: string,
+//   updateDto: UpdateTaskDto
+// ): Promise<Task> {
+//   const task = await this.taskRepo.findOne({ where: { id: taskId } });
+//   if (!task) throw new NotFoundException('Task not found');
+
+//   if (updateDto.status) task.status = updateDto.status;
+//   if (updateDto.submissionUrl) task.submissionUrl = updateDto.submissionUrl;
+  
+//   return this.taskRepo.save(task);
+// }
+
+async updateTask(
+  taskId: string,
+  updateDto: UpdateTaskDto
+): Promise<Task> {
+  const task = await this.taskRepo.findOne({ where: { id: taskId } });
+  if (!task) throw new NotFoundException('Task not found');
+
+  // Simply update with the provided string
+  if (updateDto.submissionUrl !== undefined) {
+    task.submissionUrl = updateDto.submissionUrl;
+  }
+
+  return this.taskRepo.save(task);
+}
+
+}

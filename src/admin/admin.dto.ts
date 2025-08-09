@@ -45,5 +45,10 @@ export class CreateUserDto {
     @IsEmail()
     //@Matches(/\.xyz$/, { message: 'Email must have .com' })
     Email: string;
+
+
+    @IsNotEmpty()
+    @Length(6,20)
+    password: string;
      
 }
