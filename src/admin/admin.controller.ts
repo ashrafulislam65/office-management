@@ -1,5 +1,5 @@
 //import { Body,Controller,Delete,Get,Param,ParseUUIDPipe,Patch,Post,Query } from"@nestjs/common";
-import { Body, Controller, Post, Get, Param, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe, BadRequestException, Patch, UseGuards, Delete, Query, Put } from "@nestjs/common";
+import { Body, Controller, Post, Get, Param, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe, BadRequestException, Patch, UseGuards, Delete, Query, Put, ParseUUIDPipe, ParseIntPipe } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import { AdminService } from './admin.service';
@@ -14,6 +14,11 @@ import { Department } from "./department.entity";
 import { CreateMemorandumDto, UpdateMemorandumDto } from "./memorandum.dto";
 import { Memorandum } from "./memorandum.entity";
 import { CreateTaskDto, UpdateTaskDto } from "./task.dto";
+import { CreateHrDto, UpdateHrDto } from "../hr/hr.dto";
+import { HrEntity } from "../hr/hr.entity";
+import { Employees } from "../employees/employees.entity";
+import { CreateEmployeeTaskDto, SubmitEmployeeTaskDto, UpdateEmployeeTaskDto } from "./employee-task.dto";
+import { EmployeeTask } from "./employee-task.entity";
 @Controller('admin/users')
 export class AdminController {
     
@@ -149,15 +154,15 @@ async getAdminwithFullName(@Query('fullName') fullName: string): Promise<AdminEn
 
 //department 
 
- @Post(':adminId')
+ @Post('departments/:adminId')
 async createDepartment(
-  @Param('adminId') adminId: string , // No UUID validation
+  @Param('adminId', ParseUUIDPipe) adminId: string ,
   @Body() createDto: CreateDepartmentDto
 ) {
   return this.adminService.createDepartment(adminId, createDto);
 }
 
- @Get(":adminId")
+ @Get("departments/:adminId")
  async getAdminDepartments(
    @Param('adminId') adminId: string
  ): Promise<Department[]> {
@@ -274,6 +279,87 @@ async updateTask(
   @Body() updateDto: UpdateTaskDto
 ) {
   return this.adminService.updateTask(taskId, updateDto);
+}
+
+// add hr 
+
+@Post('hr-management')
+@UsePipes(new ValidationPipe())
+async createHr(
+  @Body() createDto: CreateHrDto
+): Promise<HrEntity> {
+  return this.adminService.createHr(createDto);
+}
+
+@Get('hr-management')
+async getAllHr(): Promise<HrEntity[]> {
+  return this.adminService.getAllHr();
+}
+
+@Get('hr-management/:id')
+async getHrById(@Param('id') id: number): Promise<HrEntity> {
+  return this.adminService.getHrById(id);
+
+
+}
+
+@Patch('hr-management/:id')
+  @UsePipes(new ValidationPipe())
+  async updateHr(
+    @Param('id') id: number,
+    @Body() updateDto: UpdateHrDto
+  ): Promise<HrEntity> {
+    return this.adminService.updateHr(id, updateDto);
+  }
+
+   
+// get all employee
+
+  @Get('employees')
+  async getAllEmployees(): Promise<Employees[]> {
+    return this.adminService.getAllEmployees();
+  }
+
+  // employee task 
+  @Post(':adminId/employee-tasks')
+@UsePipes(new ValidationPipe())
+async createEmployeeTask(
+  @Param('adminId') adminId: string,
+  @Body() createDto: CreateEmployeeTaskDto
+): Promise<EmployeeTask> {
+  return this.adminService.createEmployeeTask(adminId, createDto);
+}
+
+@Get(':adminId/employee-tasks')
+async getAdminEmployeeTasks(
+  @Param('adminId') adminId: string
+): Promise<EmployeeTask[]> {
+  return this.adminService.getAdminEmployeeTasks(adminId);
+}
+
+@Get('employee-tasks/:employeeId')
+async getEmployeeTasks(
+  @Param('employeeId', ParseIntPipe) employeeId: number
+): Promise<EmployeeTask[]> {
+  return this.adminService.getEmployeeTasks(employeeId);
+}
+
+@Patch('employee-tasks/submit/:taskId')
+@UsePipes(new ValidationPipe())
+async submitEmployeeTask(
+  @Param('taskId') taskId: string,
+  @Body() submitDto: SubmitEmployeeTaskDto
+): Promise<EmployeeTask> {
+  return this.adminService.submitEmployeeTask(taskId, submitDto);
+}
+
+@Patch('employee-tasks/:taskId')
+@UsePipes(new ValidationPipe())
+async updateEmployeeTask(
+  @Param('taskId') taskId: string,
+  @Body() updateDto: UpdateEmployeeTaskDto
+): Promise<EmployeeTask> {
+  return this.adminService.updateEmployeeTask(taskId, updateDto);
 }
 
 }

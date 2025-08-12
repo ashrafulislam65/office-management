@@ -24,7 +24,8 @@ import { Department } from './department.entity';
 import { Employees } from '../employees/employees.entity'; // Add this import
 import { Memorandum } from './memorandum.entity';
 import{ Task } from './task.entity'; // Import Task entity
-import { HrEntity } from 'src/hr/hr.entity';
+import { HrEntity } from '../hr/hr.entity';
+import { EmployeeTask } from './employee-task.entity';
 
 @Module({
   imports: [
@@ -34,7 +35,8 @@ import { HrEntity } from 'src/hr/hr.entity';
       Employees,
       Memorandum ,
       Task,
-      HrEntity
+      HrEntity,
+      EmployeeTask
 
     ])
   ],

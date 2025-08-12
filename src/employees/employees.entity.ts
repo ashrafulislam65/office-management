@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { EmployeeTask } from 'src/admin/employee-task.entity';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 
 @Entity()
 export class Employees {
-    @PrimaryGeneratedColumn({ unsigned: true })
+    @PrimaryGeneratedColumn()
     id: number;
 
     @Column({ length: 100 })
@@ -24,11 +25,14 @@ export class Employees {
     @Column()
     gender: string;
 
-    @Column()
-    phoneNumber: string;
+     @Column()
+     phoneNumber: string;
   departments: any;
-    memorandums: any;
+     memorandums: any;
 
 
+    @OneToMany(()=>EmployeeTask,task=>task.assignedTo)
+    tasks: EmployeeTask[];
+  //departments: any;
    
 }

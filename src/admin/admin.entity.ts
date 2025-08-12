@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { BadRequestException } from "@nestjs/common";
 import { Department } from "./department.entity";
 import { Memorandum } from "./memorandum.entity";
-import { Employees } from "src/employees/employees.entity";
+import { Employees } from "../employees/employees.entity";
 import { Task } from "./task.entity";
 
 @Entity("admin")
@@ -53,6 +53,7 @@ export class AdminEntity {
      @CreateDateColumn()
      createdAt: Date;
     memorandums: any;
+    assignedEmployeeTasks: any;
 
     @BeforeInsert()
     async validatePhone(){
@@ -82,6 +83,8 @@ memorandum: Memorandum[];
 
 @OneToMany(() => Task, task => task.assignedBy)
 assignedTasks: Task[];
+
+
 
 
 }

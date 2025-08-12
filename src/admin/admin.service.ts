@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable,NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { v4 as uuidv4 } from 'uuid';
-import { IsNull, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { AdminEntity } from "./admin.entity";
 //import{User} from "./user.interface";
@@ -14,13 +14,16 @@ import { Employees } from "../employees/employees.entity";
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { isUUID } from "class-validator";
-import { CreateEmployeesDto } from "src/employees/employees.dto";
+import { CreateEmployeesDto } from "../employees/employees.dto";
 import { CreateMemorandumDto, UpdateMemorandumDto } from "./memorandum.dto";
 import { Memorandum } from "./memorandum.entity";
 import { CreateTaskDto, UpdateTaskDto } from "./task.dto";
 import { Task } from "./task.entity";
-import { HrEntity } from "src/hr/hr.entity";
+import { HrEntity } from "../hr/hr.entity";
 import { TaskStatus } from './task.entity'; // Add this import
+import { CreateHrDto, UpdateHrDto } from "../hr/hr.dto";
+import { EmployeeTask, EmployeeTaskStatus } from "./employee-task.entity";
+import{CreateEmployeeTaskDto, SubmitEmployeeTaskDto, UpdateEmployeeTaskDto} from "./employee-task.dto";
 
 @Injectable()
 export class AdminService {
@@ -38,7 +41,9 @@ export class AdminService {
         @InjectRepository(Task)
         private taskRepo: Repository<Task>,
         @InjectRepository(HrEntity)
-        private hrRepo: Repository<HrEntity>
+        private hrRepo: Repository<HrEntity>,
+        @InjectRepository(EmployeeTask)
+        private employeeTaskRepo: Repository<EmployeeTask>
     ) {}
 
 // private users:User[] = [];
@@ -543,6 +548,7 @@ async deleteMemorandum(adminId: string, memorandumId: string): Promise<void> {
 //   return this.taskRepo.save(task);
 // }
 
+//hr task assign to hr
 
 async createTask(adminId: string, createDto: CreateTaskDto): Promise<Task> {
   const admin = await this.adminRepo.findOne({ where: { adminId } });
@@ -597,6 +603,171 @@ async updateTask(
   }
 
   return this.taskRepo.save(task);
+}
+
+
+
+//add hr
+async createHr(createDto:CreateHrDto):Promise<HrEntity> {
+
+  const hr=this.hrRepo.create({
+    ...createDto,
+    isWorking:createDto.isWorking?? false
+  });
+  return this.hrRepo.save(hr);
+
+
+}
+
+  async getAllHr(): Promise<HrEntity[]> {
+    return this.hrRepo.find();
+  }
+
+  async getHrById(id:number):Promise<HrEntity>{
+    const hr=await this.hrRepo.findOne({where:{id}});
+    if(!hr){
+      throw new NotFoundException(`Hr with id ${id} not found`);
+    }
+    return hr;
+
+  }
+
+
+  async updateHr(id:number,updateDto:UpdateHrDto):Promise<HrEntity>{
+    const hr= await this.hrRepo.findOne({where:{id}});
+    if(!hr){
+      throw new NotFoundException(`Hr with id ${id} not found`);
+    }
+    Object.assign(hr,{...updateDto});
+    return this.hrRepo.save(hr);
+
+  }
+
+  // admin.service.ts
+
+// async deleteHrByEmail(email: string): Promise<void> {
+  
+//   const hr = await this.hrRepo.findOne({ where: { email } });
+//   if (!hr) {
+//     throw new NotFoundException(`HR with email ${email} not found`);
+//   }
+
+//   const result = await this.hrRepo.delete(hr.id);
+//   if (result.affected === 0) {
+//     throw new NotFoundException(`HR with email ${email} not found`);
+//   }
+
+// }
+
+
+
+//get all employee
+async getAllEmployees(): Promise<Employees[]> {
+    return this.employeeRepo.find({
+      select: ['id', 'fullName', 'email', 'status', 'gender','phoneNumber'],
+      order: { fullName: 'ASC' }
+    });
+  }
+
+
+
+  //assign task to employee
+
+
+//    async createEmployeeTask(adminId: string, createDto: CreateEmployeeTaskDto): Promise<EmployeeTask> {
+//   const admin = await this.adminRepo.findOne({ where: { adminId } });
+//   if (!admin) throw new NotFoundException('Admin not found');
+
+//   // const employee = await this.employeeRepo.findOne({ 
+//   //   where: { id: createDto.employeeId } // Now matches number type
+//   // });
+  
+//   const employee = await this.employeeRepo.findOne({
+//     where: { id: createDto.employeeId },
+//   });
+//   if (!employee) throw new NotFoundException('Employee not found');
+//   const task = this.employeeTaskRepo.create({
+//     title: createDto.title,
+//     description: createDto.description,
+//     url: createDto.url || null, // Explicitly set to null if undefined
+//     dueDate: new Date(createDto.dueDate),
+//     assignedBy: admin,
+//     assignedTo: employee,
+//     status: EmployeeTaskStatus.PENDING
+//   });
+
+//   return await this.employeeTaskRepo.save(task); // Add await here
+// }
+
+
+
+async createEmployeeTask(adminId: string, createDto: CreateEmployeeTaskDto): Promise<EmployeeTask> {
+  const admin = await this.adminRepo.findOne({ where: { adminId } });
+  if (!admin) throw new NotFoundException('Admin not found');
+
+  const employee = await this.employeeRepo.findOne({
+    where: { id: createDto.employeeId },
+  });
+  if (!employee) throw new NotFoundException('Employee not found');
+
+  const task = this.employeeTaskRepo.create({
+    title: createDto.title,
+    description: createDto.description,
+    url: createDto.url || null, // Explicitly set to null if undefined
+    dueDate: new Date(createDto.dueDate),
+    assignedBy: admin,
+    assignedTo: employee,
+    status: EmployeeTaskStatus.PENDING
+  });
+
+  return await this.employeeTaskRepo.save(task);
+
+}
+
+
+
+async getAdminEmployeeTasks(adminId: string): Promise<EmployeeTask[]> {
+  return this.employeeTaskRepo.find({
+    where: { assignedBy: { adminId } },
+    relations: ['assignedTo'],
+    order: { assignedAt: 'DESC' }
+  });
+}
+
+async getEmployeeTasks(employeeId: number): Promise<EmployeeTask[]> {
+  return this.employeeTaskRepo.find({
+    where: { assignedTo: { id: employeeId } },
+    relations: ['assignedBy'],
+    order: { dueDate: 'ASC' }
+  });
+}
+
+async submitEmployeeTask(taskId: string, submitDto: SubmitEmployeeTaskDto): Promise<EmployeeTask> {
+  const task = await this.employeeTaskRepo.findOne({ where: { id: taskId } });
+  if (!task) throw new NotFoundException('Task not found');
+
+  task.submissionUrl = submitDto.submissionUrl;
+  task.status = EmployeeTaskStatus.SUBMITTED;
+  task.submittedAt = new Date();
+
+  return this.employeeTaskRepo.save(task);
+}
+
+async updateEmployeeTask(taskId: string, updateDto: UpdateEmployeeTaskDto): Promise<EmployeeTask> {
+  const task = await this.employeeTaskRepo.findOne({ where: { id: taskId } });
+  if (!task) throw new NotFoundException('Task not found');
+
+  if (updateDto.submissionUrl) {
+    task.submissionUrl = updateDto.submissionUrl;
+  }
+  if (updateDto.status) {
+    task.status = updateDto.status;
+    if (updateDto.status === EmployeeTaskStatus.SUBMITTED && !task.submittedAt) {
+      task.submittedAt = new Date();
+    }
+  }
+
+  return this.employeeTaskRepo.save(task);
 }
 
 }

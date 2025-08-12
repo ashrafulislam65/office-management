@@ -87,7 +87,7 @@ export class Task {
   @ManyToOne(() => AdminEntity, admin => admin.assignedTasks)
   assignedBy: AdminEntity;
 
-  @ManyToOne(() => HrEntity, hr => hr.tasks)
+  @ManyToOne(() => HrEntity, hr => hr.tasks, { nullable: true, onDelete: 'SET NULL' })
   assignedTo: HrEntity;
 
   @UpdateDateColumn()
