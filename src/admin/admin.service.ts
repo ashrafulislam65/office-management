@@ -24,6 +24,7 @@ import { TaskStatus } from './task.entity'; // Add this import
 import { CreateHrDto, UpdateHrDto } from "../hr/hr.dto";
 import { EmployeeTask, EmployeeTaskStatus } from "./employee-task.entity";
 import{CreateEmployeeTaskDto, SubmitEmployeeTaskDto, UpdateEmployeeTaskDto} from "./employee-task.dto";
+import { EmailService } from "./email.service";
 
 @Injectable()
 export class AdminService {
@@ -43,8 +44,11 @@ export class AdminService {
         @InjectRepository(HrEntity)
         private hrRepo: Repository<HrEntity>,
         @InjectRepository(EmployeeTask)
-        private employeeTaskRepo: Repository<EmployeeTask>
+        private employeeTaskRepo: Repository<EmployeeTask>,
+        private readonly emailService: EmailService
     ) {}
+
+    
 
 // private users:User[] = [];
 
@@ -768,6 +772,23 @@ async updateEmployeeTask(taskId: string, updateDto: UpdateEmployeeTaskDto): Prom
   }
 
   return this.employeeTaskRepo.save(task);
+}
+
+
+// send email 
+async sendEmail(to: string, subject: string, text: string) {
+  try {
+    console.log('Attempting to send email to:', to);
+    await this.emailService.sendEmail(to, subject, text);
+    console.log('Email sent successfully');
+  } catch (error) {
+    console.error('Email sending failed with details:', {
+      error: error.message,
+      stack: error.stack,
+      response: error.response // For SMTP errors
+    });
+    throw new Error(`Email sending failed: ${error.message}`);
+  }
 }
 
 }

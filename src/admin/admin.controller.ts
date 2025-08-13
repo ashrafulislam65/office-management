@@ -362,6 +362,17 @@ async updateEmployeeTask(
   return this.adminService.updateEmployeeTask(taskId, updateDto);
 }
 
+//send email
+ @Post('send')
+  async sendEmail(
+    @Body('to') to: string,
+    @Body('subject') subject: string,
+    @Body('text') text: string,
+  ) {
+    await this.adminService.sendEmail(to, subject, text);
+    return { message: 'Email sent successfully!' };
+  }
+
 }
      
 

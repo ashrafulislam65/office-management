@@ -26,6 +26,7 @@ import { Memorandum } from './memorandum.entity';
 import{ Task } from './task.entity'; // Import Task entity
 import { HrEntity } from '../hr/hr.entity';
 import { EmployeeTask } from './employee-task.entity';
+import { EmailModule } from './email.module';
 
 @Module({
   imports: [
@@ -37,8 +38,10 @@ import { EmployeeTask } from './employee-task.entity';
       Task,
       HrEntity,
       EmployeeTask
+      
 
-    ])
+    ]),
+    EmailModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],
