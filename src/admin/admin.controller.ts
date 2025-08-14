@@ -85,7 +85,7 @@ export class AdminController {
 
      // ...existing code...
      //admin profile 
-    @Post()
+    @Post('register')
     @UsePipes(new ValidationPipe())
     async createAdmin(
     @Body() adminData: CreateUserDto
@@ -174,17 +174,29 @@ async createDepartment(
     return this.adminService.getAdminDepartments(adminId);
      }
 
-     @Put(":adminId/:departmentId")
-     @UsePipes(new ValidationPipe())
-     async updateDepartment(
-       @Param('adminId') adminId: string,
-       @Param('departmentId') departmentId: string,
-       @Body() updateDto: UpdateDepartmentDto
-     ): Promise<Department> {
-       return this.adminService.updateDepartment(adminId, departmentId, updateDto);
-     }
+    //  @Put(":adminId/:departmentId")
+    //  @UsePipes(new ValidationPipe())
+    //  async updateDepartment(
+    //    @Param('adminId') adminId: string,
+    //    @Param('departmentId') departmentId: string,
+    //    @Body() updateDto: UpdateDepartmentDto
+    //  ): Promise<Department> {
+    //    return this.adminService.updateDepartment(adminId, departmentId, updateDto);
+    //  }
 
     // c:\Users\MSI\Desktop\project_backend\office-management\src\admin\admin.controller.ts
+
+
+    @Put(':adminId/:employeeId')
+@UsePipes(new ValidationPipe())
+async updateDepartmentByEmployee(
+  @Param('adminId') adminId: string,
+  @Param('employeeId', ParseIntPipe) employeeId: number,
+  @Body() updateDto: UpdateDepartmentDto
+): Promise<Department> {
+  return this.adminService.updateDepartmentByEmployee(adminId, employeeId, updateDto);
+}
+
 
 @Delete(':adminId/:departmentId')
 async deleteDepartment(
@@ -196,7 +208,7 @@ async deleteDepartment(
 
 }
 
-@Get('departments/all')
+@Get('departments')
   async getAllDepartments(): Promise<Department[]> {
     return this.adminService.getAllDepartments();
   }

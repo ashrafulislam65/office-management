@@ -193,6 +193,14 @@ export class AdminService {
             throw new UnauthorizedException('Phone number already exists');
         }
 
+        const existingAdminByEmail = await this.adminRepo.findOne({
+        where: { Email: adminData.Email }
+    });
+
+    if (existingAdminByEmail) {
+        throw new UnauthorizedException('Email already exists');
+    }
+
         const admin = this.adminRepo.create(adminData);
         return await this.adminRepo.save(admin);
       }
@@ -350,31 +358,67 @@ async getDepartmentById(id: string, departmentId: string): Promise<Department | 
     });
 }
 
-async updateDepartment(
+// async updateDepartment(
+//   adminId: string,
+//   departmentId: string,
+//   updateDto: UpdateDepartmentDto
+// ): Promise<Department> {
+//   const department = await this.departmentRepo.findOne({
+//     where: { id: departmentId, admin: { adminId } }
+//   });
+  
+//   if (!department) {
+//     throw new NotFoundException('Department not found');
+//   }
+
+//   // Update employee reference if needed
+//   if (updateDto.employeeId) {
+//     const employee = await this.employeeRepo.findOne({
+//       where: { id: updateDto.employeeId }
+//     });
+//     if (!employee) {
+//       throw new NotFoundException(`Employee with ID ${updateDto.employeeId} not found`);
+//     }
+//     department.employee = employee;
+//   }
+
+//   // Update other fields
+//   if (updateDto.departmentType) {
+//     department.departmentType = updateDto.departmentType;
+//   }
+//   if (updateDto.role) {
+//     department.role = updateDto.role;
+//   }
+//   if (updateDto.joiningDate) {
+//     department.joiningDate = updateDto.joiningDate;
+//   }
+//   if (updateDto.isActive !== undefined) {
+//     department.isActive = updateDto.isActive;
+//   }
+
+//   return this.departmentRepo.save(department);
+// }
+
+
+async updateDepartmentByEmployee(
   adminId: string,
-  departmentId: string,
+  employeeId: number,
   updateDto: UpdateDepartmentDto
 ): Promise<Department> {
+  // Find department by adminId and employeeId
   const department = await this.departmentRepo.findOne({
-    where: { id: departmentId, admin: { adminId } }
+    where: { 
+      admin: { adminId },
+      employee: { id: employeeId }
+    },
+    relations: ['admin', 'employee']
   });
-  
+
   if (!department) {
-    throw new NotFoundException('Department not found');
+    throw new NotFoundException('Department not found for this admin and employee combination');
   }
 
-  // Update employee reference if needed
-  if (updateDto.employeeId) {
-    const employee = await this.employeeRepo.findOne({
-      where: { id: updateDto.employeeId }
-    });
-    if (!employee) {
-      throw new NotFoundException(`Employee with ID ${updateDto.employeeId} not found`);
-    }
-    department.employee = employee;
-  }
-
-  // Update other fields
+  // Update fields
   if (updateDto.departmentType) {
     department.departmentType = updateDto.departmentType;
   }
@@ -390,7 +434,6 @@ async updateDepartment(
 
   return this.departmentRepo.save(department);
 }
-
 
 //   async getDepartmentById(id:number): Promise<Department> {
 //     const department = await this.departmentRepo.findOneBy({ id });
@@ -442,24 +485,37 @@ async updateDepartment(
     // }
 
     // Create memorandum
-    async createMemorandum(adminId: string, createDto: CreateMemorandumDto) {
-    // Verify admin exists
-    const admin = await this.adminRepo.findOne({ 
-      where: { adminId } 
-    });
-    if (!admin) {
-      throw new NotFoundException('Admin not found');
-    }
+  //   async createMemorandum(adminId: string, createDto: CreateMemorandumDto) {
+  //   // Verify admin exists
+  //   const admin = await this.adminRepo.findOne({ 
+  //     where: { adminId } 
+  //   });
+  //   if (!admin) {
+  //     throw new NotFoundException('Admin not found');
+  //   }
 
      
-    const memorandum = this.memorandumRepo.create({
-      ...createDto,
+  //   const memorandum = this.memorandumRepo.create({
+  //     ...createDto,
       
-    });
+  //   });
     
-    return this.memorandumRepo.save(memorandum);
-  }
+  //   return this.memorandumRepo.save(memorandum);
+  // }
    
+  async createMemorandum(adminId: string, createDto: CreateMemorandumDto) {
+  const admin = await this.adminRepo.findOne({ 
+    where: { adminId } 
+  });
+  if (!admin) throw new NotFoundException('Admin not found');
+
+  const memorandum = this.memorandumRepo.create({
+    ...createDto,
+    admin // Ensure admin is assigned
+  });
+  
+  return this.memorandumRepo.save(memorandum);
+}
     async getAllMemorandums(): Promise<Memorandum[]> {
         return this.memorandumRepo.find({
             relations: ['admin'],
