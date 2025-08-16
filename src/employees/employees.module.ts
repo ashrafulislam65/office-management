@@ -6,10 +6,12 @@ import { EmployeesService } from './employees.service';
 import { LeaveService } from './leave.service';
 import { EmployeesController } from './employees.controller';
 import { LeaveController } from './leave.controller';
+import { AttendanceEntity } from 'src/hr/hr.attendanceEntity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Employees, Leave])],
+    imports: [TypeOrmModule.forFeature([Employees, Leave,AttendanceEntity])],
     providers: [EmployeesService, LeaveService],
     controllers: [EmployeesController, LeaveController],
+    exports: [EmployeesService, TypeOrmModule],
 })
 export class EmployeesModule {}

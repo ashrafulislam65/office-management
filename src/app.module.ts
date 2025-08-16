@@ -1,13 +1,17 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { EmployeesModule } from './employees/employees.module';
+import { EmployeesService } from './employees/employees.service';
+import { EmployeesController } from './employees/employees.controller';
+import { HrController } from './hr/hr.controller';
+import { HrService } from './hr/hr.services';
+import { HrModule } from './hr/hr.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EmployeesModule } from './employees/employees.module';
 
 @Module({
-  imports: [
-    EmployeesModule, 
-    TypeOrmModule.forRoot({
+  imports: [HrModule, EmployeesModule, TypeOrmModule.forRoot(
+    {
       type: 'postgres',
       host: 'dpg-d25r49a4d50c73fjma40-a.singapore-postgres.render.com',
       port: 5432,
@@ -21,9 +25,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
           rejectUnauthorized: false,
         }
       }
-    }),
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+      } ),
+],
+  controllers: [AppController, EmployeesController],
+  providers: [AppService, EmployeesService],
 })
 export class AppModule {}
+

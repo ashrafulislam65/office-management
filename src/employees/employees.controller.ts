@@ -2,6 +2,8 @@ import { Body, Controller, Get, Post, Put, Param, UsePipes, ValidationPipe, Pars
 import { EmployeesService } from './employees.service';
 import { ChangePasswordDto, CreateEmployeesDto, UpdateEmployeeProfileDto, UpdateEmployeesStatusDto } from './employees.dto';
 import { Employees } from './employees.entity';
+import { CreateAttendanceDto } from 'src/hr/dto/hr.attendanceDto';
+import { AttendanceEntity } from 'src/hr/hr.attendanceEntity';
 //import { Department } from "../employees/department.entity";
 //import { CreateDepartmentDto, UpdateDepartmentDto } from "../employees/department.dto";
 //import { AdminEntity } from '../employees/admin.entity';
@@ -113,5 +115,36 @@ async changePassword(
     
     return { message: 'Password changed successfully' };
 }
-
+  ///attendence
+   @Post(':id/attendance')
+    @UsePipes(new ValidationPipe())
+    async markAttendance(
+        @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST })) id: number,
+        @Body() createAttendanceDto: CreateAttendanceDto,
+    ): Promise<AttendanceEntity> {
+        // Verify the employee exists
+        await this.employeesService.findOne(id);
+        return this.employeesService.markAttendance(id, createAttendanceDto);
+    }
+     @Get(':id/attendance')
+    async getEmployeeAttendance(
+        @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST })) id: number,
+    ): Promise<AttendanceEntity[]> {
+        // Verify the employee exists
+        await this.employeesService.findOne(id);
+        return this.employeesService.getEmployeeAttendance(id);
+    }
+    // Employee can check in
+    @Post(':id/check-in')
+    async checkIn(
+        @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST })) id: number,
+    ): Promise<AttendanceEntity> {
+        return this.employeesService.checkIn(id);
+    }
+     @Post(':id/check-out')
+    async checkOut(
+        @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST })) id: number,
+    ): Promise<AttendanceEntity> {
+        return this.employeesService.checkOut(id);
+    }
 }

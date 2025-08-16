@@ -1,15 +1,20 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Employees, EmployeeStatus } from './employees.entity';
 import { CreateEmployeesDto, UpdateEmployeesStatusDto, UpdateEmployeeProfileDto } from './employees.dto';
 import * as bcrypt from 'bcrypt';
+import { AttendanceEntity } from 'src/hr/hr.attendanceEntity';
+import { CreateAttendanceDto } from 'src/hr/dto/hr.attendanceDto';
 @Injectable()
 export class EmployeesService {
     private readonly SALT_ROUNDS = 12;
     constructor(
         @InjectRepository(Employees)
         private employeesRepository: Repository<Employees>,
+        // Inject other services if needed
+         @InjectRepository(AttendanceEntity)
+        private attendanceRepository: Repository<AttendanceEntity>,
     ) {}
 
      async create(createEmployeesDto: CreateEmployeesDto): Promise<Employees> {
@@ -99,4 +104,119 @@ export class EmployeesService {
         return this.employeesRepository.save(employee);
     }
     
+    ///attendence
+      async markAttendance(id: number, createAttendanceDto: CreateAttendanceDto): Promise<AttendanceEntity> {
+        const employee = await this.findOne(id);
+        
+        // Check if attendance already exists for this date
+        const existingAttendance = await this.attendanceRepository.findOne({
+            where: {
+                employee: { id },
+                date: createAttendanceDto.date
+            }
+        });
+
+        if (existingAttendance) {
+            throw new HttpException('Attendance already marked for this date', HttpStatus.BAD_REQUEST);
+        }
+
+        const attendance = this.attendanceRepository.create({
+            ...createAttendanceDto,
+            employee,
+            empFullName: employee.fullName,
+            status: createAttendanceDto.status || 'present'
+        });
+
+        return this.attendanceRepository.save(attendance);
+    }
+
+    async getEmployeeAttendance(id: number): Promise<AttendanceEntity[]> {
+        return this.attendanceRepository.find({
+            where: { employee: { id } },
+            order: { date: 'DESC' }
+        });
+    }
+      async checkIn(id: number): Promise<AttendanceEntity> {
+        const employee = await this.findOne(id);
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date().toTimeString().split(' ')[0];
+        
+        let attendance = await this.attendanceRepository.findOne({
+            where: {
+                employee: { id },
+                date: today
+            }
+        });
+
+        if (!attendance) {
+            attendance = this.attendanceRepository.create({
+                employee,
+                empFullName: employee.fullName,
+                date: today,
+                status: 'present',
+                checkInTime: now
+            });
+        } else if (attendance.checkInTime) {
+            throw new HttpException('Already checked in today', HttpStatus.BAD_REQUEST);
+        } else {
+            attendance.checkInTime = now;
+            attendance.status = 'present';
+        }
+
+        return this.attendanceRepository.save(attendance);
+    }
+     async checkOut(id: number): Promise<AttendanceEntity> {
+        const employee = await this.findOne(id);
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date().toTimeString().split(' ')[0];
+        
+        const attendance = await this.attendanceRepository.findOne({
+            where: {
+                employee: { id },
+                date: today
+            }
+        });
+
+        if (!attendance) {
+            throw new HttpException('You need to check in first', HttpStatus.BAD_REQUEST);
+        }
+
+        if (!attendance.checkInTime) {
+            throw new HttpException('You need to check in first', HttpStatus.BAD_REQUEST);
+        }
+
+        if (attendance.checkOutTime) {
+            throw new HttpException('Already checked out today', HttpStatus.BAD_REQUEST);
+        }
+
+        attendance.checkOutTime = now;
+        return this.attendanceRepository.save(attendance);
+    }
+
+    // Get monthly attendance summary
+    async getMonthlyAttendanceSummary(id: number, year: number, month: number): Promise<{present: number, absent: number, late: number}> {
+        const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
+        const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+        
+        const attendances = await this.attendanceRepository.find({
+            where: {
+                employee: { id },
+                date: Between(startDate, endDate)
+            }
+        });
+
+        const summary = {
+            present: 0,
+            absent: 0,
+            late: 0
+        };
+
+        attendances.forEach(att => {
+            if (att.status === 'present') summary.present++;
+            else if (att.status === 'absent') summary.absent++;
+            else if (att.status === 'late') summary.late++;
+        });
+
+        return summary;
+    }
 }
