@@ -18,6 +18,7 @@ import { SalaryEntity } from './hr.salaryEntity';
 import { CreateSalaryDto, UpdateSalaryDto } from './dto/hr.salaryDto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class HrService {
@@ -38,6 +39,7 @@ export class HrService {
     private readonly salaryRepository: Repository<SalaryEntity>,
 
     private readonly jwtService: JwtService,
+    private readonly mailerService: MailerService,
   ) {}
   getDashboardData(): string {
     return 'Dashboard data for HR.';
@@ -349,5 +351,20 @@ export class HrService {
     const token = await this.jwtService.signAsync(payload);
 
     return { token };
+  }
+
+  //Mailer Forget And Reset Password
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await this.mailerService.sendMail({
+      to: email,
+      from: '"No Reply" <n201033.rafsanyeasir@gmail.com>',
+      subject: 'Password Reset Code',
+      text: `Your Forget password code is ${code}`,
+    });
+
+    return { message: 'Password reset code sent' };
   }
 }

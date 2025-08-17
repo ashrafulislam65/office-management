@@ -250,4 +250,12 @@ export class HrController {
     const imagePath = join(process.cwd(), 'hr/uploads', name);
     return res.sendFile(imagePath);
   }
+
+  //Mailer forget password
+  @Post('forgotpassword')
+  async forgotPassword(
+    @Body('email') email: string,
+  ): Promise<{ message: string }> {
+    return this.hrService.forgotPassword(email);
+  }
 }

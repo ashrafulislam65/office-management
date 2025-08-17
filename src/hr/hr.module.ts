@@ -8,6 +8,7 @@ import { TaskEntity } from './hr.hrTaskEntity';
 import { AttendanceEntity } from './hr.attendanceEntity';
 import { SalaryEntity } from './hr.salaryEntity';
 import { JwtModule } from '@nestjs/jwt';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
@@ -22,6 +23,20 @@ import { JwtModule } from '@nestjs/jwt';
       global: true,
       secret: 'rafsan-hr-part-on-office-project-for-web-tech',
       signOptions: { expiresIn: '1d' },
+    }),
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: 'n201033.rafsanyeasir@gmail.com',
+          pass: 'bcmvbpezguoahkbh',
+        },
+      },
+      defaults: {
+        from: '"No Reply" <n201033.rafsanyeasir@gmail.com>',
+      },
     }),
   ],
   controllers: [HrController],
