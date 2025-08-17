@@ -7,6 +7,10 @@ import * as bcrypt from 'bcrypt';
 import { AttendanceEntity } from 'src/hr/hr.attendanceEntity';
 import { CreateAttendanceDto } from 'src/hr/dto/hr.attendanceDto';
 import { Memorandum } from 'src/admin/memorandum.entity';
+import { EmployeeTask, EmployeeTaskStatus } from 'src/admin/employee-task.entity';
+import { CreateEmployeeTaskDto, SubmitTaskDto } from 'src/admin/employee-task.dto';
+import { AdminEntity } from 'src/admin/admin.entity';
+import { Department } from 'src/admin/department.entity';
 
 @Injectable()
 export class EmployeesService {
@@ -19,6 +23,13 @@ export class EmployeesService {
         private attendanceRepository: Repository<AttendanceEntity>,
          @InjectRepository(Memorandum)
         private memorandumRepository: Repository<Memorandum>,
+        @InjectRepository(EmployeeTask)
+        private employeeTaskRepository: Repository<EmployeeTask>,
+        @InjectRepository(AdminEntity)
+        private adminRepository: Repository<AdminEntity>,
+        @InjectRepository(Department)
+        private departmentRepository: Repository<Department>,
+        
        
     ) {}
 
@@ -74,19 +85,9 @@ export class EmployeesService {
         return this.employeesRepository.save(employee);
     }
 
-    async findInactiveEmployees(): Promise<Employees[]> {
-        return this.employeesRepository.find({
-            where: {
-                status: EmployeeStatus.INACTIVE
-            }
-        });
-    }
+    
 
-    async findEmployeesOlderThan40(): Promise<Employees[]> {
-        return this.employeesRepository.createQueryBuilder('employee')
-            .where('employee.age > :age', { age: 40 })
-            .getMany();
-    }
+    
 
     async findByEmail(email: string): Promise<Employees | undefined> {
         const employee = await this.employeesRepository.findOne({ where: { email } });
@@ -270,5 +271,101 @@ async validateEmployee(email: string, password: string): Promise<Employees> {
 
     return employee;
   }
-     
+  //admin task
+  async getEmployeeTasks(employeeId: number): Promise<EmployeeTask[]> {
+    await this.findOne(employeeId); // Verify employee exists
+    return this.employeeTaskRepository.find({
+      where: { assignedTo: { id: employeeId } },
+      relations: ['assignedBy'],
+      order: { dueDate: 'ASC' },
+    });
+  }
+
+  async createEmployeeTask(employeeId: number, taskDto: CreateEmployeeTaskDto, adminId: string): Promise<EmployeeTask> {
+    const employee = await this.findOne(employeeId);
+    const admin = await this.adminRepository.findOne({ where: { adminId } });
+
+    if (!admin) {
+      throw new NotFoundException('Admin not found');
+    }
+
+    const task = this.employeeTaskRepository.create({
+      ...taskDto,
+      assignedTo: employee,
+      assignedBy: admin,
+      dueDate: new Date(taskDto.dueDate),
+      status: EmployeeTaskStatus.PENDING,
+    });
+
+    return this.employeeTaskRepository.save(task);
+  }
+
+  async submitTask(employeeId: number, taskId: string, submitDto: SubmitTaskDto): Promise<EmployeeTask> {
+    const task = await this.employeeTaskRepository.findOne({
+      where: { id: taskId, assignedTo: { id: employeeId } },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found or not assigned to this employee');
+    }
+
+    if (task.status !== EmployeeTaskStatus.PENDING) {
+      throw new BadRequestException('Task has already been submitted');
+    }
+
+    task.submissionUrl = submitDto.submissionUrl;
+    task.status = EmployeeTaskStatus.SUBMITTED;
+    task.submittedAt = new Date();
+
+    return this.employeeTaskRepository.save(task);
+  }
+
+  async getTaskDetails(employeeId: number, taskId: string): Promise<EmployeeTask> {
+    const task = await this.employeeTaskRepository.findOne({
+      where: { id: taskId, assignedTo: { id: employeeId } },
+      relations: ['assignedBy'],
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found or not assigned to this employee');
+    }
+
+    return task;
+  }
+    // Department Management
+   async getEmployeeDepartments(employeeId: number): Promise<Department[]> {
+    try {
+        // First verify the employee exists
+        const employee = await this.findOne(employeeId);
+        
+        if (!employee) {
+            throw new NotFoundException(`Employee with ID ${employeeId} not found`);
+        }
+
+        // Then fetch the departments
+        const departments = await this.departmentRepository.find({
+            where: { employee: { id: employeeId } },
+            order: { joiningDate: 'DESC' }
+        });
+
+        // Optional: Return empty array if no departments found
+        if (!departments || departments.length === 0) {
+            return [];
+        }
+
+        return departments;
+    } catch (error) {
+        // Handle specific error cases
+        if (error instanceof NotFoundException) {
+            throw error; // Re-throw the not found exception
+        }
+        
+        // Log unexpected errors
+        console.error(`Error fetching departments for employee ${employeeId}:`, error);
+        throw new HttpException(
+            'Failed to fetch department information',
+            HttpStatus.INTERNAL_SERVER_ERROR
+        );
+    }
+}
 }

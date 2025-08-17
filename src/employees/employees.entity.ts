@@ -2,6 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, Index, UpdateDateColumn, Create
 import { Leave } from './leave.entity';
 import { Exclude } from 'class-transformer';
 import { Memorandum } from 'src/admin/memorandum.entity';
+import { EmployeeTask } from 'src/admin/employee-task.entity';
+import { Department } from 'src/admin/department.entity';
 export enum EmployeeStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive'
@@ -58,4 +60,9 @@ export class Employees {
     // Add this to your Employees entity
    @OneToMany(() => Memorandum, memorandum => memorandum.recipient)
    memorandums: Memorandum[];
+   //task
+   @OneToMany(() => EmployeeTask, task => task.assignedTo)
+  tasks: EmployeeTask[];
+   @OneToMany(() => Department, department => department.employee)
+  departments: Department[];
 }

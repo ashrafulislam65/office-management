@@ -8,10 +8,10 @@ import { Memorandum } from 'src/admin/memorandum.entity';
 import { LoginDto } from './login.dto';
 import { Request, Response } from 'express';
 import { SessionGuard } from './session.guard';
+import { EmployeeTask } from 'src/admin/employee-task.entity';
+import { CreateEmployeeTaskDto, SubmitTaskDto } from 'src/admin/employee-task.dto';
+import { Department } from 'src/admin/department.entity';
 
-//import { Department } from "../employees/department.entity";
-//import { CreateDepartmentDto, UpdateDepartmentDto } from "../employees/department.dto";
-//import { AdminEntity } from '../employees/admin.entity';
 
 @Controller('employees')
 @UseInterceptors(ClassSerializerInterceptor) 
@@ -53,16 +53,6 @@ export class EmployeesController {
         return this.employeesService.updateStatus(id, updateEmployeesStatusDto);
     }
 
-   
-@Get('inactive')
-async findInactiveEmployees(): Promise<Employees[]> {
-  return this.employeesService.findInactiveEmployees();
-}
-
-    @Get('older-than-40')
-    async findEmployeesOlderThan40(): Promise<Employees[]> {
-        return this.employeesService.findEmployeesOlderThan40();
-    }
     @Get('email/:email')
 async findByEmail(@Param('email') email: string): Promise<Employees | null> {
     const employee = await this.employeesService.findByEmail(email);
@@ -229,5 +219,53 @@ async login(
     async getMyProfile(@Session() session: Record<string, any>) {
         return this.employeesService.findOne(session.employee.id);
     }
+
+    // Employee Task Management
+    @Get(':id/tasks')
+  @UseGuards(SessionGuard)
+  async getEmployeeTasks(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<EmployeeTask[]> {
+    return this.employeesService.getEmployeeTasks(id);
+  }
+
+  @Post(':id/tasks')
+  @UseGuards(SessionGuard)
+  @UsePipes(new ValidationPipe())
+  async createEmployeeTask(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() taskDto: CreateEmployeeTaskDto,
+    @Session() session: Record<string, any>,
+  ): Promise<EmployeeTask> {
+    return this.employeesService.createEmployeeTask(id, taskDto, session.admin?.adminId);
+  }
+
+  @Post(':id/tasks/:taskId/submit')
+  @UseGuards(SessionGuard)
+  @UsePipes(new ValidationPipe())
+  async submitTask(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('taskId') taskId: string,
+    @Body() submitDto: SubmitTaskDto,
+  ): Promise<EmployeeTask> {
+    return this.employeesService.submitTask(id, taskId, submitDto);
+  }
+
+  @Get(':id/tasks/:taskId')
+  @UseGuards(SessionGuard)
+  async getTaskDetails(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('taskId') taskId: string,
+  ): Promise<EmployeeTask> {
+    return this.employeesService.getTaskDetails(id, taskId);
+  }
+  // Department Management
+  @Get(':id/department')
+  @UseGuards(SessionGuard)
+  async getEmployeeDepartments(
+    @Param('id', ParseIntPipe) id: number
+  ): Promise<Department[]> {
+    return this.employeesService.getEmployeeDepartments(id);
+  }
  
 }
