@@ -1,7 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-
+import { Entity, PrimaryGeneratedColumn, Column, Index, UpdateDateColumn, CreateDateColumn, OneToMany } from 'typeorm';
+import { Leave } from './leave.entity';
+import { Exclude } from 'class-transformer';
+export enum EmployeeStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive'
+}
 @Entity()
 export class Employees {
+   
     @PrimaryGeneratedColumn({ unsigned: true })
     id: number;
 
@@ -11,14 +17,19 @@ export class Employees {
     @Column({ unsigned: true })
     age: number;
 
-    @Column({ default: 'active' })
-    status: 'active' | 'inactive';
+   @Column({
+    type: 'enum',
+    enum: EmployeeStatus,
+    default: EmployeeStatus.ACTIVE
+  })
+  status: EmployeeStatus;
 
-    // Additional fields you might need
     @Column()
+    @Index({ unique: true }) // This makes email unique and creates an index
     email: string;
 
-    @Column()
+     @Column()
+    @Exclude() // This will exclude the password from serialization
     password: string;
 
     @Column()
@@ -26,4 +37,20 @@ export class Employees {
 
     @Column()
     phoneNumber: string;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true})
+    salary: number;
+
+    @Column({nullable: true, default: 'General'})
+    department: string;
+     @Column({ nullable: true })
+    photoUrl: string; 
+    @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    createdAt: Date;
+
+    
+    @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+    updatedAt: Date;
+     @OneToMany(() => Leave, leave => leave.employee)
+    leaves: Leave[];
 }

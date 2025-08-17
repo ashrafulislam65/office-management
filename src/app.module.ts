@@ -18,6 +18,9 @@ import { EmployeesModule } from './employees/employees.module';
       username: 'office_management_taln_user',
       password: 'jHyLtss6t2w1s0DWYwMYn25tnmoT0GE2',
       database: 'office_management_taln',
+      autoLoadEntities: true,  
+      synchronize: true,       
+      extra: {
       autoLoadEntities: true,
       synchronize: true,
       extra : {

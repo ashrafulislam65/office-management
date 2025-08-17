@@ -1,38 +1,115 @@
-import { IsEmail, IsNotEmpty, Matches, IsIn, IsNumberString, Length, IsString, IsInt, Min, MaxLength } from 'class-validator';
+import { IsEmail, IsEnum, IsIn, IsInt, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString, IsUrl, Length, Matches, Max, MaxLength, Min } from "class-validator";
+
+export enum EmployeeStatus {
+    ACTIVE = 'active',
+    INACTIVE = 'inactive'
+    
+}
 
 export class CreateEmployeesDto {
     @IsString()
-    @MaxLength(100)
+    @IsNotEmpty()
+    @MaxLength(100, { message: 'Full name must be shorter than or equal to 100 characters' })
     fullName: string;
 
+    @IsOptional()
+    @IsEnum(EmployeeStatus, { 
+        message: `Status must be one of: ${Object.values(EmployeeStatus).join(', ')}` 
+    })
+    status?: EmployeeStatus;
+
     @IsInt()
-    @Min(0)
+    @Min(18, { message: 'Employee must be at least 18 years old' })
+    @Max(65, { message: 'Employee must be younger than 65 years' })
     age: number;
 
-    @IsEmail()
-    @Matches(/.*aiub\.edu$/, {
+    @IsEmail({}, { message: 'Invalid email format' })
+    @Matches(/@aiub\.edu$/, {
         message: 'Email must be from aiub.edu domain'
     })
     email: string;
 
-    @IsNotEmpty()
-    @Length(6, 30)
+    @IsNotEmpty({ message: 'Password is required' })
+    @Length(8, 30, { 
+        message: 'Password must be between 8 and 30 characters long' 
+    })
     @Matches(/(?=.*[A-Z])/, {
         message: 'Password must contain at least one uppercase letter'
     })
+    @Matches(/(?=.*[a-z])/, {
+        message: 'Password must contain at least one lowercase letter'
+    })
+    @Matches(/(?=.*\d)/, {
+        message: 'Password must contain at least one number'
+    })
+    @Matches(/(?=.*[!@#$%^&*])/, {
+        message: 'Password must contain at least one special character'
+    })
     password: string;
 
-    @IsIn(['male', 'female'], {
-        message: 'Gender must be either male or female'
+    @IsIn(['male', 'female', 'other'], {
+        message: 'Gender must be either male, female or other'
     })
     gender: string;
 
-    @IsNumberString()
-    @Length(11, 15)
+    @IsNumberString({}, { message: 'Phone number must contain only digits' })
+    @Length(11, 15, { 
+        message: 'Phone number must be between 11 and 15 digits long' 
+    })
+    @Matches(/^[0-9]+$/, {
+        message: 'Phone number must contain only digits'
+    })
     phoneNumber: string;
+
+    @IsOptional()
+    @IsNumber({}, { message: 'Salary must be a valid number' })
+    @Min(0, { message: 'Salary cannot be negative' })
+    salary?: number;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(50, { message: 'Department name too long' })
+    department?: string;
 }
 
 export class UpdateEmployeesStatusDto {
-    @IsIn(['active', 'inactive'])
-    status: 'active' | 'inactive';
+    @IsNotEmpty()
+    @IsEnum(EmployeeStatus, { 
+        message: `Status must be one of: ${Object.values(EmployeeStatus).join(', ')}` 
+    })
+    status: EmployeeStatus;
+}
+
+export class UpdateEmployeeProfileDto {
+    @IsOptional()
+    @IsString()
+    @MaxLength(100, { message: 'Full name must be shorter than or equal to 100 characters' })
+    fullName?: string;
+
+    @IsOptional()
+    @IsString()
+    phoneNumber?: string;
+
+    @IsOptional()
+    @IsString()
+    department?: string;
+
+    @IsOptional()
+    @IsString()
+    @IsUrl()
+    photoUrl?: string; // URL to the uploaded photo
+}
+export class ChangePasswordDto {
+    @IsNotEmpty()
+    @IsString()
+    currentPassword: string;
+
+    @IsNotEmpty()
+    @IsString()
+    @Length(8, 30)
+    @Matches(/(?=.*[A-Z])/, { message: 'Must contain at least one uppercase letter' })
+    @Matches(/(?=.*[a-z])/, { message: 'Must contain at least one lowercase letter' })
+    @Matches(/(?=.*\d)/, { message: 'Must contain at least one number' })
+    @Matches(/(?=.*[!@#$%^&*])/, { message: 'Must contain at least one special character' })
+    newPassword: string;
 }
