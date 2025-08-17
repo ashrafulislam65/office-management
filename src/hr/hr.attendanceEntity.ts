@@ -15,7 +15,7 @@ export class AttendanceEntity {
   @Column({ type: 'date' })
   date: string;
 
-  @Column({ default: 'present' })
+  @Column({ default: 'absent' })
   status: 'present' | 'absent' | 'late';
 
   @Column({ type: 'time', nullable: true })
