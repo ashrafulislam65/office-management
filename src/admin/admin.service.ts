@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable,NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable,InternalServerErrorException,NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { v4 as uuidv4 } from 'uuid';
 import { In, IsNull, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -847,4 +847,207 @@ async sendEmail(to: string, subject: string, text: string) {
   }
 }
 
+
+// session login 
+
+// async login(email: string, password: string, req: any): Promise<{ role: string, user: any }> {
+//   // Normalize email input
+//   email = email.toLowerCase().trim();
+  
+//   // 1. Try Admin Login
+//   if (email.endsWith('.xyz')) {
+//     const admin = await this.adminRepo.findOne({ 
+//       where: { Email: email },
+//       select: ['adminId', 'Email', 'password', 'fullName']
+//     });
+    
+//     if (admin && await bcrypt.compare(password, admin.password)) {
+//       req.session.user = {
+//         id: admin.adminId,
+//         email: admin.Email,
+//         role: 'admin',
+//         fullName: admin.fullName
+//       };
+//       return { role: 'admin', user: admin };
+//     }
+//   }
+  
+//   // 2. Try Employee Login
+//   if (email.endsWith('@aiub.edu')) {
+//     const employee = await this.employeeRepo.findOne({ 
+//       where: { email },
+//       select: ['id', 'email', 'password', 'fullName', 'status']
+//     });
+    
+//     if (employee && await bcrypt.compare(password, employee.password)) {
+//       if (employee.status !== 'active') {
+//         throw new UnauthorizedException('Account is inactive');
+//       }
+      
+//       req.session.user = {
+//         id: employee.id,
+//         email: employee.email,
+//         role: 'employee',
+//         fullName: employee.fullName
+//       };
+//       return { role: 'employee', user: employee };
+//     }
+//   }
+  
+//   // 3. Try HR Login
+//   const hr = await this.hrRepo.findOne({ 
+//     where: { email },
+//     select: ['id', 'email', 'password', 'fullName', 'isWorking']
+//   });
+  
+//   if (hr && await bcrypt.compare(password, hr.password)) {
+//     if (!hr.isWorking) {
+//       throw new UnauthorizedException('HR account is deactivated');
+//     }
+    
+//     req.session.user = {
+//       id: hr.id,
+//       email: hr.email,
+//       role: 'hr',
+//       fullName: hr.fullName
+//     };
+//     return { role: 'hr', user: hr };
+//   }
+  
+//   throw new UnauthorizedException('Invalid credentials');
+// } 
+
+async login(email: string, password: string, req: any): Promise<{ role: string, user: any }> {
+  // Validate input
+  if (!email || !password) {
+    throw new BadRequestException('Email and password are required');
+  }
+
+  // Normalize email
+  email = email.toLowerCase().trim();
+  
+  try {
+    // 1. Try Admin Login (.xyz domain)
+    if (email.endsWith('.xyz')) {
+      const admin = await this.adminRepo.findOne({ 
+        where: { Email: email },
+        select: ['adminId', 'Email', 'password', 'fullName', 'isActive']
+      });
+
+      if (admin) {
+        if (!admin.isActive) {
+          throw new UnauthorizedException('Admin account is inactive');
+        }
+
+        const isMatch = await bcrypt.compare(password, admin.password);
+        if (isMatch) {
+          req.session.user = {
+            id: admin.adminId,
+            email: admin.Email,
+            role: 'admin',
+            fullName: admin.fullName
+          };
+          return { 
+            role: 'admin', 
+            user: {
+              id: admin.adminId,
+              email: admin.Email,
+              fullName: admin.fullName
+            }
+          };
+        }
+      }
+    }
+
+    // 2. Try Employee Login (@aiub.edu domain)
+    if (email.endsWith('@aiub.edu')) {
+      const employee = await this.employeeRepo.findOne({ 
+        where: { email },
+        select: ['id', 'email', 'password', 'fullName', 'status']
+      });
+
+      if (employee) {
+        if (employee.status !== 'active') {
+          throw new UnauthorizedException('Employee account is inactive');
+        }
+
+        const isMatch = await bcrypt.compare(password, employee.password);
+        if (isMatch) {
+          req.session.user = {
+            id: employee.id,
+            email: employee.email,
+            role: 'employee',
+            fullName: employee.fullName
+          };
+          return { 
+            role: 'employee',
+            user: {
+              id: employee.id,
+              email: employee.email,
+              fullName: employee.fullName
+            }
+          };
+        }
+      }
+    }
+
+    // 3. Try HR Login (all other emails)
+    const hr = await this.hrRepo.findOne({ 
+      where: { email },
+      select: ['id', 'email', 'password', 'fullName', 'isWorking']
+    });
+
+    if (hr) {
+      if (!hr.isWorking) {
+        throw new UnauthorizedException('HR account is deactivated');
+      }
+
+      const isMatch = await bcrypt.compare(password, hr.password);
+      if (isMatch) {
+        req.session.user = {
+          id: hr.id,
+          email: hr.email,
+          role: 'hr',
+          fullName: hr.fullName
+        };
+        return { 
+          role: 'hr',
+          user: {
+            id: hr.id,
+            email: hr.email,
+            fullName: hr.fullName
+          }
+        };
+      }
+    }
+
+    // If no user found or password mismatch
+    throw new UnauthorizedException('Invalid credentials');
+
+  } catch (error) {
+    console.error('Login error:', error);
+    if (error instanceof UnauthorizedException) {
+      throw error; // Re-throw auth errors
+    }
+    throw new InternalServerErrorException('Login processing failed');
+  }
 }
+
+  logout(req: any): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      req.session.destroy((err) => {
+        if (err) {
+          reject(false);
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  }
+
+  getSessionUser(req: any): any {
+    return req.session.user || null;
+  }
+}
+
+

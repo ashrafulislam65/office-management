@@ -1,5 +1,5 @@
 //import { Body,Controller,Delete,Get,Param,ParseUUIDPipe,Patch,Post,Query } from"@nestjs/common";
-import { Body, Controller, Post, Get, Param, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe, BadRequestException, Patch, UseGuards, Delete, Query, Put, ParseUUIDPipe, ParseIntPipe } from "@nestjs/common";
+import { Body, Controller, Post, Get, Param, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe, BadRequestException, Patch, UseGuards, Delete, Query, Put, ParseUUIDPipe, ParseIntPipe, Req, UnauthorizedException } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
 import { AdminService } from './admin.service';
@@ -19,6 +19,8 @@ import { HrEntity } from "../hr/hr.entity";
 import { Employees } from "../employees/employees.entity";
 import { CreateEmployeeTaskDto, SubmitEmployeeTaskDto, UpdateEmployeeTaskDto } from "./employee-task.dto";
 import { EmployeeTask } from "./employee-task.entity";
+import { SessionGuard } from "./session.guard";
+import { LoginDto } from "./login.dto";
 @Controller('admin/users')
 export class AdminController {
     
@@ -155,6 +157,7 @@ async getAdminwithFullName(@Query('fullName') fullName: string): Promise<AdminEn
 //department 
 
  @Post('departments/:adminId')
+ @UseGuards(SessionGuard)
 async createDepartment(
   @Param('adminId', ParseUUIDPipe) adminId: string ,
   @Body() createDto: CreateDepartmentDto
@@ -163,6 +166,7 @@ async createDepartment(
 }
 
  @Get("departments/:adminId")
+ @UseGuards(SessionGuard)
  async getAdminDepartments(
    @Param('adminId') adminId: string
  ): Promise<Department[]> {
@@ -188,6 +192,7 @@ async createDepartment(
 
 
     @Put(':adminId/:employeeId')
+    @UseGuards(SessionGuard)
 @UsePipes(new ValidationPipe())
 async updateDepartmentByEmployee(
   @Param('adminId') adminId: string,
@@ -199,6 +204,7 @@ async updateDepartmentByEmployee(
 
 
 @Delete(':adminId/:departmentId')
+@UseGuards(SessionGuard)
 async deleteDepartment(
   @Param('adminId') adminId: string,
   @Param('departmentId') departmentId: string
@@ -209,6 +215,7 @@ async deleteDepartment(
 }
 
 @Get('departments')
+@UseGuards(SessionGuard)
   async getAllDepartments(): Promise<Department[]> {
     return this.adminService.getAllDepartments();
   }
@@ -216,6 +223,7 @@ async deleteDepartment(
 // Create memorandum
 
    @Post(':adminId/memorandums')
+   @UseGuards(SessionGuard)
    @UsePipes(new ValidationPipe())
 async createMemorandum(
   @Param('adminId') adminId: string,
@@ -226,6 +234,7 @@ async createMemorandum(
 
 
 @Get(':adminId/memorandums')
+@UseGuards(SessionGuard)
 async getAllMemorandums():Promise<Memorandum[]> {
   return this.adminService.getAllMemorandums();
 
@@ -233,6 +242,7 @@ async getAllMemorandums():Promise<Memorandum[]> {
 }
 
 @Get(':adminId/memorandums')
+@UseGuards(SessionGuard)
 async getAdminMemorandums(
   @Param('adminId') adminId: string
 ): Promise<Memorandum[]> {
@@ -240,6 +250,7 @@ async getAdminMemorandums(
 }
 
 @Patch(':adminId/memorandums/:id')
+@UseGuards(SessionGuard)
 @UsePipes(new ValidationPipe())
 async updateMemorandum(
   @Param('adminId') adminId: string,
@@ -251,6 +262,7 @@ async updateMemorandum(
 
 
 @Delete(':adminId/memorandums/:id')
+@UseGuards(SessionGuard)
 async deleteMemorandum(
   @Param('adminId') adminId: string,
   @Param('id') id: string
@@ -260,6 +272,7 @@ async deleteMemorandum(
 
 // Create Task for hr
 @Post(':adminId/tasks')
+@UseGuards(SessionGuard)
 @UsePipes(new ValidationPipe())
 async createTask(
   @Param('adminId') adminId: string,
@@ -269,6 +282,7 @@ async createTask(
 }
 
 @Get(':adminId/tasks')
+@UseGuards(SessionGuard)
 async getAdminTasks(
   @Param('adminId') adminId: string
 ) {
@@ -285,6 +299,7 @@ async getAdminTasks(
 // }
 
 @Patch('tasks/:taskId')
+@UseGuards(SessionGuard)
 @UsePipes(new ValidationPipe())
 async updateTask(
   @Param('taskId') taskId: string,
@@ -296,6 +311,7 @@ async updateTask(
 // add hr 
 
 @Post('hr-management')
+@UseGuards(SessionGuard)
 @UsePipes(new ValidationPipe())
 async createHr(
   @Body() createDto: CreateHrDto
@@ -304,11 +320,13 @@ async createHr(
 }
 
 @Get('hr-management')
+@UseGuards(SessionGuard)
 async getAllHr(): Promise<HrEntity[]> {
   return this.adminService.getAllHr();
 }
 
 @Get('hr-management/:id')
+@UseGuards(SessionGuard)
 async getHrById(@Param('id') id: number): Promise<HrEntity> {
   return this.adminService.getHrById(id);
 
@@ -316,6 +334,7 @@ async getHrById(@Param('id') id: number): Promise<HrEntity> {
 }
 
 @Patch('hr-management/:id')
+@UseGuards(SessionGuard)
   @UsePipes(new ValidationPipe())
   async updateHr(
     @Param('id') id: number,
@@ -328,12 +347,14 @@ async getHrById(@Param('id') id: number): Promise<HrEntity> {
 // get all employee
 
   @Get('employees')
+  @UseGuards(SessionGuard)
   async getAllEmployees(): Promise<Employees[]> {
     return this.adminService.getAllEmployees();
   }
 
   // employee task 
   @Post(':adminId/employee-tasks')
+  @UseGuards(SessionGuard)
 @UsePipes(new ValidationPipe())
 async createEmployeeTask(
   @Param('adminId') adminId: string,
@@ -343,6 +364,7 @@ async createEmployeeTask(
 }
 
 @Get(':adminId/employee-tasks')
+@UseGuards(SessionGuard)
 async getAdminEmployeeTasks(
   @Param('adminId') adminId: string
 ): Promise<EmployeeTask[]> {
@@ -350,6 +372,7 @@ async getAdminEmployeeTasks(
 }
 
 @Get('employee-tasks/:employeeId')
+@UseGuards(SessionGuard)
 async getEmployeeTasks(
   @Param('employeeId', ParseIntPipe) employeeId: number
 ): Promise<EmployeeTask[]> {
@@ -357,6 +380,7 @@ async getEmployeeTasks(
 }
 
 @Patch('employee-tasks/submit/:taskId')
+@UseGuards(SessionGuard)
 @UsePipes(new ValidationPipe())
 async submitEmployeeTask(
   @Param('taskId') taskId: string,
@@ -366,6 +390,7 @@ async submitEmployeeTask(
 }
 
 @Patch('employee-tasks/:taskId')
+@UseGuards(SessionGuard)
 @UsePipes(new ValidationPipe())
 async updateEmployeeTask(
   @Param('taskId') taskId: string,
@@ -385,7 +410,66 @@ async updateEmployeeTask(
     return { message: 'Email sent successfully!' };
   }
 
+
+
+  // session login 
+
+//  @Post('login')
+// @UsePipes(new ValidationPipe())
+// async login(
+//   @Body() body: { Email: string, password: string }, // Change here
+//   @Req() req: Request
+// ) {
+//   if (!body.Email || !body.password) { // Change here
+//     throw new BadRequestException('Email and password are required');
+//   }
+//   return this.adminService.login(body.Email, body.password, req); // Change here
+// }
+
+//  @Post('login')
+// @UsePipes(new ValidationPipe())
+// async login(
+//   @Body() body: { email: string, password: string },
+//   @Req() req: Request
+// ) {
+//   if (!body.email || !body.password) {
+//     throw new BadRequestException('Email and password are required');
+//   }
+  
+//   // Debug log
+//   console.log(`Login attempt for: ${body.email}`);
+  
+//   return this.adminService.login(body.email, body.password, req);
+// }
+
+@Post('login')
+@UsePipes(new ValidationPipe())
+async login(
+  @Body() loginDto: LoginDto,
+  @Req() req: Request
+) {
+  return this.adminService.login(loginDto.email, loginDto.password, req);
 }
+
+  @Post('logout')
+  async logout(@Req() req: Request) {
+    const success = await this.adminService.logout(req);
+    if (!success) {
+      throw new BadRequestException('Logout failed');
+    }
+    return { message: 'Logged out successfully' };
+  }
+
+  @Get('session')
+  async getSession(@Req() req: Request) {
+    const user = this.adminService.getSessionUser(req);
+    if (!user) {
+      throw new UnauthorizedException('No active session');
+    }
+    return user;
+  }
+}
+
      
 
 

@@ -43,7 +43,7 @@ export class CreateUserDto {
 
    
     @IsEmail()
-    //@Matches(/\.xyz$/, { message: 'Email must have .com' })
+      @Matches(/\.xyz$/, { message: 'Email must have .xyz domain' })
     Email: string;
 
 
