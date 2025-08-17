@@ -7,9 +7,10 @@ import { LeaveService } from './leave.service';
 import { EmployeesController } from './employees.controller';
 import { LeaveController } from './leave.controller';
 import { AttendanceEntity } from 'src/hr/hr.attendanceEntity';
+import { Memorandum } from 'src/admin/memorandum.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Employees, Leave,AttendanceEntity])],
+    imports: [TypeOrmModule.forFeature([Employees, Leave,AttendanceEntity,Memorandum])],
     providers: [EmployeesService, LeaveService],
     controllers: [EmployeesController, LeaveController],
     exports: [EmployeesService, TypeOrmModule],

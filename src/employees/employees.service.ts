@@ -6,6 +6,8 @@ import { CreateEmployeesDto, UpdateEmployeesStatusDto, UpdateEmployeeProfileDto 
 import * as bcrypt from 'bcrypt';
 import { AttendanceEntity } from 'src/hr/hr.attendanceEntity';
 import { CreateAttendanceDto } from 'src/hr/dto/hr.attendanceDto';
+import { Memorandum } from 'src/admin/memorandum.entity';
+
 @Injectable()
 export class EmployeesService {
     private readonly SALT_ROUNDS = 12;
@@ -15,6 +17,9 @@ export class EmployeesService {
         // Inject other services if needed
          @InjectRepository(AttendanceEntity)
         private attendanceRepository: Repository<AttendanceEntity>,
+         @InjectRepository(Memorandum)
+        private memorandumRepository: Repository<Memorandum>,
+       
     ) {}
 
      async create(createEmployeesDto: CreateEmployeesDto): Promise<Employees> {
@@ -219,4 +224,51 @@ export class EmployeesService {
 
         return summary;
     }
+    // get memorandum
+   // QueryBuilder ব্যবহার করুন
+async getEmployeeMemorandums(employeeId: number): Promise<Memorandum[]> {
+  return this.memorandumRepository
+    .createQueryBuilder('memorandum')
+    .leftJoinAndSelect('memorandum.admin', 'admin')
+    .where('memorandum.recipientId = :employeeId', { employeeId })
+    .orderBy('memorandum.createdAt', 'DESC')
+    .getMany();
+}
+
+async getMemorandumDetails(employeeId: number, memorandumId: string): Promise<Memorandum> {
+  const memorandum = await this.memorandumRepository
+    .createQueryBuilder('memorandum')
+    .leftJoinAndSelect('memorandum.admin', 'admin')
+    .where('memorandum.id = :memorandumId', { memorandumId })
+    .andWhere('memorandum.recipientId = :employeeId', { employeeId })
+    .getOne();
+
+  if (!memorandum) {
+    throw new NotFoundException('Memorandum not found or not authorized');
+  }
+
+  return memorandum;
+}
+//login 
+async validateEmployee(email: string, password: string): Promise<Employees> {
+    const employee = await this.employeesRepository.findOne({ 
+      where: { email } 
+    });
+
+    if (!employee) {
+      throw new NotFoundException('Employee not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, employee.password);
+    if (!isPasswordValid) {
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+    }
+
+    if (employee.status !== EmployeeStatus.ACTIVE) {
+      throw new HttpException('Account is not active', HttpStatus.FORBIDDEN);
+    }
+
+    return employee;
+  }
+     
 }

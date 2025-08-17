@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, Index, UpdateDateColumn, CreateDateColumn, OneToMany } from 'typeorm';
 import { Leave } from './leave.entity';
 import { Exclude } from 'class-transformer';
+import { Memorandum } from 'src/admin/memorandum.entity';
 export enum EmployeeStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive'
@@ -53,4 +54,8 @@ export class Employees {
     updatedAt: Date;
      @OneToMany(() => Leave, leave => leave.employee)
     leaves: Leave[];
+    //memorandum
+    // Add this to your Employees entity
+   @OneToMany(() => Memorandum, memorandum => memorandum.recipient)
+   memorandums: Memorandum[];
 }
