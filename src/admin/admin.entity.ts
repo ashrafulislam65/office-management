@@ -1,4 +1,4 @@
-import { BeforeInsert, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn ,OneToMany} from "typeorm";
+import { BeforeInsert, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn ,OneToMany, ManyToOne} from "typeorm";
 import * as bcrypt from 'bcrypt';
 
 import { BadRequestException } from "@nestjs/common";
@@ -84,6 +84,9 @@ memorandum: Memorandum[];
 @OneToMany(() => Task, task => task.assignedBy)
 assignedTasks: Task[];
 
+
+// @ManyToOne(() => Employees, employee => employee.tasks)
+//   assignedTo: Employees;
 
 
 
