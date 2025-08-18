@@ -1,12 +1,11 @@
-import { IsNotEmpty } from "class-validator";
+import { IsNotEmpty } from 'class-validator';
 
 export class CreateAttendanceDto {
-
-  @IsNotEmpty()  
-  employeeId: number;
-  
   @IsNotEmpty()
-  empFullName: string;
+  employeeId: number;
+
+  // @IsNotEmpty()
+  // empFullName: string;
 
   @IsNotEmpty()
   date: string;
@@ -16,7 +15,7 @@ export class CreateAttendanceDto {
 
   @IsNotEmpty()
   checkInTime?: string;
-  
+
   @IsNotEmpty()
   checkOutTime?: string;
 }

@@ -19,6 +19,9 @@ import { CreateSalaryDto, UpdateSalaryDto } from './dto/hr.salaryDto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { MailerService } from '@nestjs-modules/mailer';
+import { Memorandum } from 'src/admin/memorandum.entity';
+import { Task } from 'src/admin/task.entity';
+import { UpdateTaskDto } from 'src/admin/task.dto';
 
 @Injectable()
 export class HrService {
@@ -38,6 +41,12 @@ export class HrService {
     @InjectRepository(SalaryEntity)
     private readonly salaryRepository: Repository<SalaryEntity>,
 
+    @InjectRepository(Memorandum)
+    private readonly memorandumRepository: Repository<Memorandum>,
+
+    @InjectRepository(Task)
+    private readonly adminTaskRepository: Repository<Task>,
+
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
   ) {}
@@ -51,9 +60,35 @@ export class HrService {
 
   //Create new Hr
   async createHr(createHrDto: CreateHrDto): Promise<HrEntity> {
+    const existingUser = await this.hrRepository.findOne({
+      where: { username: createHrDto.username },
+    });
+    if (existingUser) {
+      throw new BadRequestException(
+        `Username "${createHrDto.username}" already exists`,
+      );
+    }
+    const existingEmail = await this.hrRepository.findOne({
+      where: { email: createHrDto.email },
+    });
+    if (existingEmail) {
+      throw new BadRequestException(
+        `Email "${createHrDto.email}" already exists`,
+      );
+    }
+    const existingPhone = await this.hrRepository.findOne({
+      where: { phone: createHrDto.phone },
+    });
+    if (existingPhone) {
+      throw new BadRequestException(
+        `Phone "${createHrDto.phone}" already exists`,
+      );
+    }
+
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(createHrDto.password, salt);
     createHrDto.password = passwordHash;
+
     const newHr = this.hrRepository.create(createHrDto);
     return await this.hrRepository.save(newHr);
   }
@@ -100,6 +135,41 @@ export class HrService {
     if (!hr) {
       throw new NotFoundException(`User with username "${username}" not found`);
     }
+    if (updateData.username && updateData.username !== hr.username) {
+      const existingUser = await this.hrRepository.findOne({
+        where: { username: updateData.username },
+      });
+      if (existingUser) {
+        throw new BadRequestException(
+          `Username "${updateData.username}" already exists`,
+        );
+      }
+    }
+    if (updateData.email && updateData.email !== hr.email) {
+      const existingEmail = await this.hrRepository.findOne({
+        where: { email: updateData.email },
+      });
+      if (existingEmail) {
+        throw new BadRequestException(
+          `Email "${updateData.email}" already exists`,
+        );
+      }
+    }
+
+    if (updateData.phone && updateData.phone !== hr.phone) {
+      const existingPhone = await this.hrRepository.findOne({
+        where: { phone: updateData.phone },
+      });
+      if (existingPhone) {
+        throw new BadRequestException(
+          `Phone "${updateData.phone}" already exists`,
+        );
+      }
+    }
+    if (updateData.password) {
+      const salt = await bcrypt.genSalt();
+      updateData.password = await bcrypt.hash(updateData.password, salt);
+    }
 
     Object.assign(hr, updateData);
 
@@ -110,6 +180,19 @@ export class HrService {
   async createEmployee(employeeData: Partial<Employees>): Promise<Employees> {
     const newEmployee = this.employeeRepository.create(employeeData);
     return await this.employeeRepository.save(newEmployee);
+  }
+
+  // Retrieve an employee by unique username
+  async findEmployeeByUsername(id: number): Promise<Employees> {
+    const user = await this.employeeRepository.findOne({
+      where: {
+        id,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException(`User with username "${id}" not found`);
+    }
+    return user;
   }
 
   //Update Employee
@@ -366,5 +449,23 @@ export class HrService {
     });
 
     return { message: 'Password reset code sent' };
+  }
+
+  //Get all memorandum
+  async findAllMemorandum(): Promise<Memorandum[]> {
+    return this.memorandumRepository.find({ relations: ['recipient'] });
+  }
+
+  // Get all admin tasks for a specific HR (assignedTo)
+  async getAdminTasksByHrId(hrId: number): Promise<Task[]> {
+    const hr = await this.hrRepository.findOne({ where: { id: hrId } });
+    if (!hr) {
+      throw new NotFoundException(`HR with ID ${hrId} not found`);
+    }
+
+    return this.adminTaskRepository.find({
+      where: { assignedTo: { id: hrId } },
+      relations: ['assignedTo', 'assignedBy'],
+    });
   }
 }

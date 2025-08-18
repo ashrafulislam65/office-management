@@ -9,6 +9,10 @@ import { AttendanceEntity } from './hr.attendanceEntity';
 import { SalaryEntity } from './hr.salaryEntity';
 import { JwtModule } from '@nestjs/jwt';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { Memorandum } from 'src/admin/memorandum.entity';
+import { Task } from 'src/admin/task.entity';
+import { AdminEntity } from 'src/admin/admin.entity';
+import { Department } from 'src/admin/department.entity';
 
 @Module({
   imports: [
@@ -18,6 +22,10 @@ import { MailerModule } from '@nestjs-modules/mailer';
       TaskEntity,
       AttendanceEntity,
       SalaryEntity,
+      Memorandum,
+      Task,
+      AdminEntity,
+      Department,
     ]),
     JwtModule.register({
       global: true,

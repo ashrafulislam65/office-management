@@ -1,7 +1,14 @@
 // src/admin/memorandum.entity.ts
 import { Employees } from 'src/employees/employees.entity';
-import { Entity, PrimaryGeneratedColumn, Column,  CreateDateColumn, ManyToOne } from 'typeorm';
- // Adjust the import path as necessary
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+} from 'typeorm';
+import { AdminEntity } from './admin.entity';
+// Adjust the import path as necessary
 
 @Entity('memorandum')
 export class Memorandum {
@@ -18,10 +25,10 @@ export class Memorandum {
   createdAt: Date;
 
   // Simple foreign key relationship
-   
- @ManyToOne(() => Employees, employee => employee.memorandums)
+
+  @ManyToOne(() => Employees, (employee) => employee.memorandums)
   recipient: Employees;
 
-//   @ManyToOne(() => AdminEntity)
-//   admin: AdminEntity;
+  @ManyToOne(() => AdminEntity)
+  admin: AdminEntity;
 }
