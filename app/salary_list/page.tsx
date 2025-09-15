@@ -28,7 +28,7 @@ export default function SalariesPage() {
           <h1 className="text-2xl font-bold">Salaries</h1>
           <Link
             href="/create_salary"
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
             + Create Salary
           </Link>
@@ -61,7 +61,7 @@ export default function SalariesPage() {
                   <td className="p-2 border">
                     <Link
                       href={`/salary_list/edit_salary/${salary.id}`}
-                      className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                      className="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-blue-700"
                     >
                       Edit
                     </Link>

@@ -161,7 +161,7 @@ export default function CreateSalaryPage() {
 
           <button
             type="submit"
-            className="bg-green-600 text-white py-2 rounded hover:bg-green-700"
+            className="bg-indigo-600 text-white py-2 rounded hover:bg-blue-700"
           >
             Pay Salary
           </button>

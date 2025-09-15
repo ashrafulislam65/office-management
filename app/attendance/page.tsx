@@ -119,6 +119,12 @@ export default function AttendanceTable() {
       <div className="p-6 space-y-4">
         <h1 className="text-2xl font-bold mb-4">Attendance Management</h1>
 
+        {message && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            {message}
+          </div>
+        )}
+
         <div className="flex justify-between items-center mb-4">
           {/* Create Attendance - Left */}
           <div className="flex gap-2 items-center">
@@ -158,86 +164,73 @@ export default function AttendanceTable() {
         </div>
       </div>
 
-      {/* Attendance table */}
-      <table className="min-w-full bg-white border rounded-lg shadow-md">
-        <thead className="bg-gray-200 text-gray-700"></thead>
-        <tbody>
-          {Object.keys(groupedRecords).map((date) => (
-            <div key={date} className="mb-6">
-              <h2 className="text-xl font-semibold mb-2">{date}</h2>
-              <table className="min-w-full bg-white border rounded-lg shadow-md mb-4">
-                <thead className="bg-gray-200 text-gray-700">
-                  <tr>
-                    <th className="py-2 px-4 border">ID</th>
-                    <th className="py-2 px-4 border">Employee</th>
-                    <th className="py-2 px-4 border">Status</th>
-                    <th className="py-2 px-4 border">Check In</th>
-                    <th className="py-2 px-4 border">Check Out</th>
-                    <th className="py-2 px-4 border">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {groupedRecords[date].map((rec: Attendance) => (
-                    <tr key={rec.id} className="text-center hover:bg-gray-100">
-                      <td className="py-2 px-4 border">{rec.id}</td>
-                      <td className="py-2 px-4 border">{rec.empFullName}</td>
-                      <td className="py-2 px-4 border">
-                        <select
-                          value={rec.status}
-                          onChange={(e) =>
-                            updateAttendance(rec.id, "status", e.target.value)
-                          }
-                          className="border rounded px-2 py-1"
-                        >
-                          <option value="present">Present</option>
-                          <option value="absent">Absent</option>
-                          <option value="late">Late</option>
-                        </select>
-                      </td>
-                      <td className="py-2 px-4 border">
-                        <input
-                          type="time"
-                          value={rec.checkInTime ?? ""}
-                          onChange={(e) =>
-                            updateAttendance(
-                              rec.id,
-                              "checkInTime",
-                              e.target.value
-                            )
-                          }
-                          className="border rounded px-2 py-1"
-                        />
-                      </td>
-                      <td className="py-2 px-4 border">
-                        <input
-                          type="time"
-                          value={rec.checkOutTime ?? ""}
-                          onChange={(e) =>
-                            updateAttendance(
-                              rec.id,
-                              "checkOutTime",
-                              e.target.value
-                            )
-                          }
-                          className="border rounded px-2 py-1"
-                        />
-                      </td>
-                      <td className="py-2 px-4 border">
-                        <button
-                          onClick={() => deleteAttendance(rec.id)}
-                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
-        </tbody>
-      </table>
+      {/* Attendance tables - one for each date */}
+      {Object.keys(groupedRecords).map((date) => (
+        <div key={date} className="mb-6">
+          <h2 className="text-xl font-semibold mb-2 ml-6">{date}</h2>
+          <table className="min-w-full bg-white border rounded-lg shadow-md mb-4">
+            <thead className="bg-gray-200 text-gray-700">
+              <tr>
+                <th className="py-2 px-4 border">ID</th>
+                <th className="py-2 px-4 border">Employee</th>
+                <th className="py-2 px-4 border">Status</th>
+                <th className="py-2 px-4 border">Check In</th>
+                <th className="py-2 px-4 border">Check Out</th>
+                <th className="py-2 px-4 border">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {groupedRecords[date].map((rec: Attendance) => (
+                <tr key={rec.id} className="text-center hover:bg-gray-100">
+                  <td className="py-2 px-4 border">{rec.id}</td>
+                  <td className="py-2 px-4 border">{rec.empFullName}</td>
+                  <td className="py-2 px-4 border">
+                    <select
+                      value={rec.status}
+                      onChange={(e) =>
+                        updateAttendance(rec.id, "status", e.target.value)
+                      }
+                      className="border rounded px-2 py-1"
+                    >
+                      <option value="present">Present</option>
+                      <option value="absent">Absent</option>
+                      <option value="late">Late</option>
+                    </select>
+                  </td>
+                  <td className="py-2 px-4 border">
+                    <input
+                      type="time"
+                      value={rec.checkInTime ?? ""}
+                      onChange={(e) =>
+                        updateAttendance(rec.id, "checkInTime", e.target.value)
+                      }
+                      className="border rounded px-2 py-1"
+                    />
+                  </td>
+                  <td className="py-2 px-4 border">
+                    <input
+                      type="time"
+                      value={rec.checkOutTime ?? ""}
+                      onChange={(e) =>
+                        updateAttendance(rec.id, "checkOutTime", e.target.value)
+                      }
+                      className="border rounded px-2 py-1"
+                    />
+                  </td>
+                  <td className="py-2 px-4 border">
+                    <button
+                      onClick={() => deleteAttendance(rec.id)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
     </div>
   );
 }
