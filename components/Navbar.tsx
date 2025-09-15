@@ -20,6 +20,7 @@ export default function Navbar() {
     { label: "Employees", href: "/employees" },
     { label: "Tasks", href: "/tasks" },
     { label: "Attendance", href: "/attendance" },
+    { label: "Payroll", href: "/salary_list" },
     { label: "Registration", href: "/registration" },
     { label: "Login", href: "/login" },
   ];
