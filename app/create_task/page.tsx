@@ -23,7 +23,38 @@ export default function CreateTask() {
   const [hrId, setHrId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const router = useRouter();
+
+  const validateForm = () => {
+    const errors: string[] = [];
+    const today = new Date().toISOString().split("T")[0];
+
+    if (!taskTitle.trim()) {
+      errors.push("Task title is required.");
+    } else if (taskTitle.trim().length < 3) {
+      errors.push("Task title must be at least 3 characters long.");
+    }
+
+    if (description.length > 200) {
+      errors.push("Description cannot be longer than 200 characters.");
+    }
+
+    if (assignedDate < today) {
+      errors.push("Assigned date cannot be in the past.");
+    }
+
+    if (dueDate < assignedDate) {
+      errors.push("Due date must be after or equal to the assigned date.");
+    }
+
+    if (!employeeId) {
+      errors.push("Please select an employee.");
+    }
+
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
 
   // Fetch HR ID and employees list
   useEffect(() => {
@@ -89,7 +120,6 @@ export default function CreateTask() {
             value={taskTitle}
             onChange={(e) => setTaskTitle(e.target.value)}
             className="border p-2 w-full rounded"
-            required
           />
 
           <textarea
@@ -106,7 +136,6 @@ export default function CreateTask() {
               value={assignedDate}
               onChange={(e) => setAssignedDate(e.target.value)}
               className="border p-2 w-full rounded"
-              required
             />
           </label>
 
@@ -117,7 +146,6 @@ export default function CreateTask() {
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
               className="border p-2 w-full rounded"
-              required
             />
           </label>
 
@@ -125,7 +153,6 @@ export default function CreateTask() {
             value={employeeId}
             onChange={(e) => setEmployeeId(Number(e.target.value))}
             className="border p-2 w-full rounded"
-            required
           >
             <option value="">Select Employee</option>
             {employees.map((emp) => (

@@ -21,7 +21,13 @@ export default function CreateSalaryPage() {
   const [hrFullName, setHrFullName] = useState("");
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [toast, setToast] = useState<{ message: string; type: "error" | "success" } | null>(null);
+
+  // Show toast for 3 seconds
+  const showToast = (message: string, type: "error" | "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,7 +51,7 @@ export default function CreateSalaryPage() {
         setEmployees(empRes.data);
       } catch (err: any) {
         console.error(err);
-        setError(err.response?.data?.message || "Failed to load data");
+        showToast(err.response?.data?.message || "Failed to load data", "error");
       } finally {
         setLoading(false);
       }
@@ -58,7 +64,12 @@ export default function CreateSalaryPage() {
     e.preventDefault();
 
     if (!employeeId) {
-      alert("Please select an employee.");
+      showToast("Please select an employee.", "error");
+      return;
+    }
+
+    if (!amount || Number(amount) <= 0) {
+      showToast("Amount must be greater than 0.", "error");
       return;
     }
 
@@ -87,19 +98,32 @@ export default function CreateSalaryPage() {
         { withCredentials: true }
       );
 
-      alert("Salary record created successfully!");
-      router.push("/salary_list");
+      showToast("Salary record created successfully!", "success");
+
+      setTimeout(() => {
+        router.push("/salary_list");
+      }, 1500);
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to create salary record");
+      showToast(err.response?.data?.message || "Failed to create salary record", "error");
     }
   };
 
   if (loading) return <p className="text-center mt-4">Loading...</p>;
-  if (error) return <p className="text-center mt-4 text-red-500">{error}</p>;
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      {/* Toast */}
+      {toast && (
+        <div
+          className={`fixed top-5 right-5 px-4 py-2 rounded shadow-lg text-white ${
+            toast.type === "error" ? "bg-red-500" : "bg-green-500"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
+
       <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold mb-4">Create Salary Record</h1>
 
@@ -109,7 +133,6 @@ export default function CreateSalaryPage() {
             value={employeeId}
             onChange={(e) => setEmployeeId(Number(e.target.value))}
             className="border p-2 rounded"
-            required
           >
             <option value="">-- Select Employee --</option>
             {employees.map((emp) => (
@@ -126,7 +149,6 @@ export default function CreateSalaryPage() {
             onChange={(e) => setAmount(e.target.value)}
             placeholder="Amount"
             className="border p-2 rounded"
-            required
           />
 
           {/* Pay Date */}
@@ -135,7 +157,6 @@ export default function CreateSalaryPage() {
             value={payDate}
             onChange={(e) => setPayDate(e.target.value)}
             className="border p-2 rounded"
-            required
           />
 
           {/* Payment Method */}
@@ -143,7 +164,6 @@ export default function CreateSalaryPage() {
             value={paymentMethod}
             onChange={(e) => setPaymentMethod(e.target.value)}
             className="border p-2 rounded"
-            required
           >
             <option value="Cash">Cash</option>
             <option value="Bank Transfer">Bank Transfer</option>

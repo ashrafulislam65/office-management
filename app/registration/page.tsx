@@ -103,7 +103,6 @@ export default function Register() {
 
     setError("");
 
-    // ✅ Axios POST to your NestJS backend
     try {
       const response = await axios.post(
         `http://localhost:3001/hr`,
@@ -292,6 +291,12 @@ export default function Register() {
             {isLoading ? "Processing..." : "Register"}
           </button>
         </form>
+        <a
+          href="/login"
+          className="mt-4 inline-block text-sm text-blue-600 hover:underline"
+        >
+          Sign In
+        </a>
       </div>
     </div>
   );

@@ -3,6 +3,8 @@
 import { useState, FormEvent } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { Link } from "lucide-react";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -11,16 +13,31 @@ export default function SignIn() {
   const [error, setError] = useState("");
   const router = useRouter();
 
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
+    if (!validateEmail(email)) {
+      toast.error("Please enter a valid email address.", { duration: 3000 });
+      setIsLoading(false);
+      return;
+    }
+    if (!password.trim()) {
+      toast.error("Password cannot be empty.", { duration: 3000 });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       await axios.post(
         "http://localhost:3001/hr/login",
         { email, password },
-        { withCredentials: true } // ✅ send HTTP-only cookie
+        { withCredentials: true }
       );
 
       // Login successful
@@ -46,7 +63,6 @@ export default function SignIn() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="border p-2 w-full rounded"
-            required
           />
 
           <input
@@ -55,7 +71,6 @@ export default function SignIn() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="border p-2 w-full rounded"
-            required
           />
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -68,6 +83,12 @@ export default function SignIn() {
             {isLoading ? "Signing In..." : "Sign In"}
           </button>
         </form>
+        <a
+          href="/registration"
+          className="mt-4 inline-block text-sm text-blue-600 hover:underline"
+        >
+          Register
+        </a>
       </div>
     </div>
   );

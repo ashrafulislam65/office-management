@@ -14,6 +14,7 @@ export default function EditTaskPage() {
   const [assignedDate, setAssignedDate] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [status, setStatus] = useState("pending");
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -37,6 +38,34 @@ export default function EditTaskPage() {
 
     fetchTask();
   }, [taskId]);
+
+  const validateForm = () => {
+    const errors: string[] = [];
+    const today = new Date().toISOString().split("T")[0];
+
+    if (!taskTitle.trim()) {
+      errors.push("Task title is required.");
+    } else if (taskTitle.trim().length < 3) {
+      errors.push("Task title must be at least 3 characters long.");
+    }
+
+    if (description.length > 200) {
+      errors.push("Description cannot be longer than 200 characters.");
+    }
+
+    if (assignedDate < today) {
+      errors.push("Assigned date cannot be in the past.");
+    }
+
+    if (dueDate < assignedDate) {
+      errors.push("Due date must be after or equal to the assigned date.");
+    }
+
+
+
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +95,6 @@ export default function EditTaskPage() {
           onChange={(e) => setTaskTitle(e.target.value)}
           placeholder="Task Title"
           className="border p-2 rounded"
-          required
         />
         <textarea
           value={description}
@@ -79,14 +107,12 @@ export default function EditTaskPage() {
           value={assignedDate}
           onChange={(e) => setAssignedDate(e.target.value)}
           className="border p-2 rounded"
-          required
         />
         <input
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
           className="border p-2 rounded"
-          required
         />
         <select
           value={status}
